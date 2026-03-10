@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Event — Session Tracker | Level 3 Motorsport</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root {
+  --bg:       #080A0D;
+  --s1:       #0D1117;
+  --s2:       #111620;
+  --s3:       #161C2A;
+  --s4:       #1C2333;
+  --border:   #1E2535;
+  --border2:  #252E42;
+  --muted:    #4A5568;
+  --dim:      #718096;
+  --text:     #E2E8F0;
+  --text2:    #A0AEC0;
+  --lime:     #AAFF00;
+  --lime2:    #88CC00;
+  --lime-dim: rgba(170,255,0,0.08);
+  --lime-glow:rgba(170,255,0,0.15);
+  --red:      #FF4444;
+  --red-dim:  rgba(255,68,68,0.1);
+  --amber:    #FFAA00;
+  --amber-dim:rgba(255,170,0,0.1);
+  --blue:     #4DA6FF;
+  --cyan:     #00E5FF;
+  --fh: 'Exo 2', sans-serif;
+  --fb: 'Rajdhani', sans-serif;
+  --fm: 'Share Tech Mono', monospace;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--fb);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ═══ TOPBAR ═══════════════════════════════════════════ */
+.topbar{
+  height:54px;
+  background:var(--s1);
+  border-bottom:2px solid var(--lime2);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;
+  position:sticky;top:0;z-index:300;
+  box-shadow:0 2px 20px rgba(170,255,0,0.08);
+}
+.tb-left{display:flex;align-items:center;gap:14px;}
+.live-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--lime);
+  box-shadow:0 0 8px var(--lime);
+  animation:pulse 1.4s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--lime);}50%{opacity:0.5;box-shadow:0 0 3px var(--lime);}}
+.tb-brand{font-family:var(--fh);font-weight:800;font-size:17px;letter-spacing:3px;color:var(--text);text-transform:uppercase;}
+.tb-brand span{color:var(--lime);}
+.tb-clock{
+  font-family:var(--fm);font-size:13px;color:var(--lime);
+  background:var(--lime-dim);border:1px solid rgba(170,255,0,0.2);
+  padding:4px 10px;border-radius:3px;letter-spacing:1px;
+}
+.tb-right{display:flex;align-items:center;gap:8px;}
+.tbtn{
+  background:var(--s3);border:1px solid var(--border2);
+  color:var(--text2);padding:7px 13px;border-radius:4px;
+  font-family:var(--fm);font-size:11px;cursor:pointer;
+  letter-spacing:1px;transition:all 0.12s;
+  display:flex;align-items:center;gap:5px;
+}
+.tbtn:hover{background:var(--s4);border-color:var(--dim);color:var(--text);}
+.tbtn.lime{background:var(--lime2);border-color:var(--lime);color:#000;font-weight:600;}
+.tbtn.lime:hover{background:var(--lime);}
+.tbtn.red{background:rgba(255,68,68,0.15);border-color:var(--red);color:var(--red);}
+.tbtn.red:hover{background:rgba(255,68,68,0.25);}
+.tbtn:disabled{opacity:0.4;cursor:not-allowed;}
+.ses-count{
+  font-family:var(--fm);font-size:11px;
+  background:var(--lime-dim);border:1px solid rgba(170,255,0,0.2);
+  color:var(--lime);padding:4px 10px;border-radius:3px;
+}
+
+/* ═══ EVENT HEADER ══════════════════════════════════════ */
+.event-bar{
+  background:var(--s2);
+  border-bottom:1px solid var(--border);
+  padding:14px 18px;
+  display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
+  position:relative;overflow:hidden;
+}
+.event-bar::before{
+  content:'';position:absolute;right:-40px;top:-40px;
+  width:220px;height:220px;
+  background:radial-gradient(circle,rgba(170,255,0,0.04) 0%,transparent 65%);
+  pointer-events:none;
+}
+.eb-title{
+  font-family:var(--fh);font-weight:800;font-size:clamp(22px,3vw,32px);
+  letter-spacing:2px;color:var(--text);line-height:1;
+  flex:1;min-width:200px;
+}
+.eb-title em{color:var(--lime);font-style:normal;}
+.eb-fields{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;}
+.ebf{display:flex;flex-direction:column;gap:3px;}
+.ebf label{font-family:var(--fm);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
+.ebf input,.ebf select{
+  background:var(--s3);border:1px solid var(--border2);
+  border-radius:3px;padding:6px 9px;
+  color:var(--text);font-family:var(--fb);font-size:13px;
+  outline:none;transition:border-color 0.12s;
+  min-width:130px;
+}
+.ebf input:focus,.ebf select:focus{border-color:var(--lime);}
+.ebf select option{background:var(--s2);}
+
+/* ═══ MAIN LAYOUT ═══════════════════════════════════════ */
+.app{display:flex;min-height:calc(100vh - 54px);}
+
+/* ═══ SESSION LIST PANEL ════════════════════════════════ */
+.sessions-panel{
+  width:300px;flex-shrink:0;
+  background:var(--s1);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:sticky;top:54px;
+  height:calc(100vh - 54px);
+  overflow:hidden;
+}
+.sp-header{
+  padding:14px 14px 10px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.sp-title{
+  font-family:var(--fm);font-size:10px;letter-spacing:2px;
+  color:var(--lime);text-transform:uppercase;margin-bottom:8px;
+}
+.new-session-btn{
+  width:100%;padding:10px;
+  background:var(--lime-dim);border:1px dashed rgba(170,255,0,0.3);
+  border-radius:5px;cursor:pointer;
+  font-family:var(--fh);font-weight:700;font-size:14px;
+  letter-spacing:2px;color:var(--lime);
+  transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.new-session-btn:hover{background:var(--lime-glow);border-color:var(--lime);}
+
+.sessions-list{flex:1;overflow-y:auto;padding:8px;}
+.ses-card{
+  border:1px solid var(--border);border-radius:6px;
+  padding:10px 12px;margin-bottom:6px;cursor:pointer;
+  transition:all 0.12s;background:var(--s2);
+  position:relative;overflow:hidden;
+}
+.ses-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--border2);transition:background 0.12s;
+}
+.ses-card:hover{border-color:var(--border2);}
+.ses-card.active{border-color:rgba(170,255,0,0.3);background:var(--lime-dim);}
+.ses-card.active::before{background:var(--lime);}
+.ses-card.has-issue::before{background:var(--red);}
+.ses-card.complete::before{background:var(--lime2);}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.sc-num{font-family:var(--fm);font-size:10px;color:var(--muted);}
+.sc-type{
+  font-family:var(--fh);font-weight:700;font-size:13px;letter-spacing:1px;
+  color:var(--text);
+}
+.ses-card.active .sc-type{color:var(--lime);}
+.sc-car{font-family:var(--fm);font-size:10px;color:var(--dim);}
+.sc-badges{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;}
+.badge{
+  font-family:var(--fm);font-size:9px;padding:2px 6px;border-radius:2px;
+  letter-spacing:0.5px;
+}
+.badge.ok{background:rgba(170,255,0,0.1);color:var(--lime2);}
+.badge.issue{background:var(--red-dim);color:var(--red);}
+.badge.warn{background:var(--amber-dim);color:var(--amber);}
+.badge.info{background:rgba(77,166,255,0.1);color:var(--blue);}
+.sc-time{font-family:var(--fm);font-size:9px;color:var(--muted);margin-top:3px;}
+
+.no-sessions{
+  padding:30px 16px;text-align:center;
+  font-size:12px;color:var(--muted);line-height:1.6;
+}
+.no-sessions .icon{font-size:28px;margin-bottom:8px;}
+
+/* ═══ DETAIL PANEL ══════════════════════════════════════ */
+.detail-panel{
+  flex:1;overflow-y:auto;
+}
+
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:400px;gap:12px;color:var(--muted);
+  padding:40px;
+}
+.empty-state .big-icon{font-size:48px;opacity:0.4;}
+.empty-state h2{font-family:var(--fh);font-size:22px;font-weight:700;letter-spacing:2px;color:var(--dim);}
+.empty-state p{font-size:13px;text-align:center;max-width:300px;line-height:1.6;}
+
+/* SESSION DETAIL */
+.session-detail{animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.sd-header{
+  padding:18px 22px 14px;
+  border-bottom:1px solid var(--border);
+  background:var(--s1);
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.sdh-left{}
+.sdh-tag{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--lime);margin-bottom:3px;}
+.sdh-title{font-family:var(--fh);font-size:26px;font-weight:800;letter-spacing:2px;color:var(--text);}
+.sdh-title em{color:var(--lime);font-style:normal;}
+.sdh-meta{font-family:var(--fm);font-size:11px;color:var(--muted);margin-top:3px;}
+.sdh-right{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;}
+
+.sd-body{padding:0 22px 40px;}
+
+/* SECTION blocks */
+.sec-block{margin-top:22px;}
+.sec-head{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:10px;
+  padding-bottom:7px;
+  border-bottom:1px solid rgba(170,255,0,0.15);
+}
+.sec-icon{font-size:16px;}
+.sec-title{font-family:var(--fh);font-size:16px;font-weight:700;letter-spacing:2px;color:var(--lime);text-transform:uppercase;}
+.sec-subtitle{font-family:var(--fm);font-size:10px;color:var(--muted);margin-left:auto;}
+
+/* DATA GRID — setup inputs */
+.data-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(165px,1fr));
+  gap:8px;
+}
+.data-grid.wide{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
+.df{display:flex;flex-direction:column;gap:4px;}
+.df label{font-family:var(--fm);font-size:9px;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;}
+.df input,.df select,.df textarea{
+  background:var(--s3);border:1px solid var(--border2);
+  border-radius:4px;padding:8px 10px;
+  color:var(--text);font-family:var(--fb);font-size:13px;
+  outline:none;transition:border-color 0.12s;width:100%;
+}
+.df input:focus,.df select:focus,.df textarea:focus{border-color:var(--lime);}
+.df select option{background:var(--s2);}
+.df textarea{resize:vertical;min-height:44px;line-height:1.4;}
+.df.full{grid-column:1/-1;}
+.df.half{grid-column:span 2;}
+
+/* tyre grid */
+.tyre-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;max-width:520px;
+}
+.tyre-axle-label{
+  grid-column:1/-1;
+  font-family:var(--fm);font-size:9px;letter-spacing:2px;
+  color:var(--muted);text-transform:uppercase;
+  padding-top:4px;
+}
+.tyre-cell{
+  background:var(--s3);border:1px solid var(--border2);
+  border-radius:6px;padding:10px;
+}
+.tc-label{font-family:var(--fm);font-size:9px;letter-spacing:1px;color:var(--lime2);text-transform:uppercase;margin-bottom:8px;}
+.tc-fields{display:flex;flex-direction:column;gap:5px;}
+.tc-row{display:flex;align-items:center;gap:6px;}
+.tc-row label{font-family:var(--fm);font-size:9px;color:var(--muted);min-width:55px;}
+.tc-row input{
+  flex:1;background:var(--s4);border:1px solid var(--border2);
+  border-radius:3px;padding:5px 7px;color:var(--text);
+  font-family:var(--fm);font-size:12px;outline:none;
+  transition:border-color 0.12s;
+}
+.tc-row input:focus{border-color:var(--lime);}
+
+/* INBOUND CHECKLIST */
+.check-grid{display:flex;flex-direction:column;gap:4px;}
+.ci-row{
+  display:grid;
+  grid-template-columns:36px 1fr 100px 120px;
+  align-items:center;
+  border:1px solid var(--border);border-radius:5px;
+  background:var(--s2);overflow:hidden;min-height:36px;
+  transition:border-color 0.12s,background 0.12s;
+}
+.ci-row:hover{border-color:var(--border2);}
+.ci-row.ck-ok{border-color:rgba(170,255,0,0.2);background:rgba(170,255,0,0.02);}
+.ci-row.ck-issue{border-color:rgba(255,68,68,0.35);background:rgba(255,68,68,0.03);}
+.ci-row.ck-warn{border-color:rgba(255,170,0,0.3);background:rgba(255,170,0,0.03);}
+.ci-tick{
+  display:flex;align-items:center;justify-content:center;
+  height:100%;border-right:1px solid var(--border);
+  cursor:pointer;transition:background 0.12s;
+}
+.ci-tick:hover{background:rgba(170,255,0,0.08);}
+.ci-tick svg{width:15px;height:15px;}
+.ci-label-text{padding:8px 10px;font-size:13px;color:var(--text2);line-height:1.3;}
+.ci-row.ck-ok .ci-label-text{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--border2);}
+.ci-sel{padding:3px 6px;border-left:1px solid var(--border);}
+.ci-sel select{
+  background:transparent;border:none;color:var(--muted);
+  font-family:var(--fm);font-size:10px;outline:none;cursor:pointer;width:100%;
+  padding:3px 0;
+}
+.ci-sel select option{background:var(--s2);}
+.ci-note{padding:3px 6px;border-left:1px solid var(--border);}
+.ci-note input{
+  background:transparent;border:none;color:var(--muted);
+  font-family:var(--fb);font-size:11px;outline:none;width:100%;
+}
+.ci-note input::placeholder{color:var(--border2);font-style:italic;}
+
+/* DRIVER REPORT */
+.driver-box{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:6px;padding:14px;
+}
+.driver-box textarea{
+  width:100%;background:var(--s3);border:1px solid var(--border2);
+  border-radius:4px;padding:8px 10px;color:var(--text);
+  font-family:var(--fb);font-size:13px;outline:none;resize:vertical;
+  min-height:70px;line-height:1.5;
+}
+.driver-box textarea:focus{border-color:var(--lime);}
+
+/* LAP DATA */
+.lap-row{
+  display:grid;grid-template-columns:36px 1fr 1fr 1fr 1fr 1fr;
+  gap:6px;align-items:center;margin-bottom:5px;
+}
+.lap-row input{
+  background:var(--s3);border:1px solid var(--border2);
+  border-radius:3px;padding:6px 7px;color:var(--text);
+  font-family:var(--fm);font-size:12px;outline:none;
+  transition:border-color 0.12s;width:100%;
+}
+.lap-row input:focus{border-color:var(--lime);}
+.lap-num{
+  font-family:var(--fm);font-size:10px;color:var(--muted);
+  text-align:center;
+}
+.lap-header{
+  display:grid;grid-template-columns:36px 1fr 1fr 1fr 1fr 1fr;
+  gap:6px;margin-bottom:4px;
+}
+.lh{font-family:var(--fm);font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:0 7px;}
+.add-lap-btn{
+  font-family:var(--fm);font-size:10px;letter-spacing:1px;
+  color:var(--lime2);background:var(--lime-dim);border:1px dashed rgba(170,255,0,0.2);
+  border-radius:4px;padding:6px;cursor:pointer;width:100%;text-align:center;
+  transition:all 0.12s;margin-top:4px;
+}
+.add-lap-btn:hover{background:var(--lime-glow);border-color:rgba(170,255,0,0.4);}
+
+/* STATUS PILLS */
+.status-row{
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;
+  padding-top:10px;border-top:1px solid var(--border);
+}
+.status-pill{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:3px;
+  font-family:var(--fm);font-size:10px;letter-spacing:0.5px;
+  border:1px solid transparent;
+}
+.sp-ok{background:rgba(170,255,0,0.08);border-color:rgba(170,255,0,0.2);color:var(--lime);}
+.sp-issue{background:var(--red-dim);border-color:rgba(255,68,68,0.3);color:var(--red);}
+.sp-warn{background:var(--amber-dim);border-color:rgba(255,170,0,0.3);color:var(--amber);}
+.sp-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+/* CHANGES / NOTES */
+.changes-area textarea{
+  width:100%;background:var(--s3);border:1px solid var(--border2);
+  border-radius:4px;padding:10px;color:var(--text);
+  font-family:var(--fb);font-size:13px;outline:none;resize:vertical;
+  min-height:80px;line-height:1.5;
+}
+.changes-area textarea:focus{border-color:var(--lime);}
+
+/* OVERALL STATUS select */
+.os-select{
+  background:var(--s3);border:1px solid var(--border2);
+  border-radius:4px;padding:8px 12px;color:var(--text);
+  font-family:var(--fh);font-weight:700;font-size:15px;letter-spacing:1px;
+  outline:none;cursor:pointer;min-width:200px;
+}
+.os-select:focus{border-color:var(--lime);}
+.os-select option{background:var(--s2);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+@media(max-width:720px){
+  .sessions-panel{display:none;}
+  .ci-row{grid-template-columns:36px 1fr;}
+  .ci-sel,.ci-note{display:none;}
+  .lap-row,.lap-header{grid-template-columns:36px 1fr 1fr 1fr;}
+  .tyre-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="live-dot"></div>
+    <div class="tb-brand">PIT LANE <span>LIVE</span></div>
+    <div class="tb-clock" id="clock">--:--:--</div>
+  </div>
+  <div class="tb-right">
+    <div class="ses-count" id="sesCount">0 Sessions</div>
+    <button class="tbtn lime" onclick="newSession()">+ NEW SESSION</button>
+    <button class="tbtn" onclick="generatePDF()" id="pdfBtn">⬇ PDF Report</button>
+    <button class="tbtn red" id="clearBtn" onclick="confirmClear()">✕ Clear All</button>
+  </div>
+</div>
+
+<!-- EVENT BAR -->
+<div class="event-bar">
+  <div>
+    <div style="font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">LIVE EVENT SESSION TRACKER</div>
+    <div class="eb-title">PIT LANE <em>DATA LOG</em></div>
+  </div>
+  <div class="eb-fields">
+    <div class="ebf"><label>Event / Round</label><input type="text" id="f-event" placeholder="e.g. BRSCC Round 3"></div>
+    <div class="ebf"><label>Circuit</label><input type="text" id="f-circuit" placeholder="e.g. Brands Hatch"></div>
+    <div class="ebf"><label>Date</label><input type="date" id="f-date"></div>
+    <div class="ebf"><label>Car Number</label><input type="text" id="f-car" placeholder="#7"></div>
+    <div class="ebf"><label>Driver</label><input type="text" id="f-driver" placeholder="Driver name"></div>
+    <div class="ebf"><label>Chief Mechanic</label><input type="text" id="f-mech" placeholder="Name"></div>
+  </div>
+</div>
+
+<!-- APP BODY -->
+<div class="app">
+  <!-- SESSION LIST -->
+  <aside class="sessions-panel">
+    <div class="sp-header">
+      <div class="sp-title">⬡ Sessions</div>
+      <div class="new-session-btn" onclick="newSession()"><span>+</span> LOG NEW SESSION</div>
+    </div>
+    <div class="sessions-list" id="sessionsList">
+      <div class="no-sessions">
+        <div class="icon">🏎</div>
+        <div>No sessions logged yet.<br>Press <strong style="color:var(--lime)">+ NEW SESSION</strong> when the car comes in.</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel" id="detailPanel">
+    <div class="empty-state">
+      <div class="big-icon">⬡</div>
+      <h2>NO ACTIVE SESSION</h2>
+      <p>Press <strong style="color:var(--lime)">+ NEW Session</strong> to log data when the car comes into the pits.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════════════════════
+function updateClock(){
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    [now.getHours(),now.getMinutes(),now.getSeconds()]
+    .map(n=>String(n).padStart(2,'0')).join(':');
+}
+setInterval(updateClock,1000); updateClock();
+
+// ══════════════════════════════════════════════════════
+//  INBOUND CHECKLIST ITEMS
+// ══════════════════════════════════════════════════════
+const INBOUND_CHECKS = [
+  { id:'fuel',    label:'Fuel level checked — refuel if required' },
+  { id:'tyres',   label:'Tyre condition visual — cuts, blistering, marbles, pressure loss' },
+  { id:'brakes',  label:'Brake pad wear visual check — inner pad thickness' },
+  { id:'discs',   label:'Disc condition — heat colouring, cracking, glazing' },
+  { id:'fluids',  label:'No fluid leaks under car — oil, water, brake fluid' },
+  { id:'exhaust', label:'Exhaust secure — no cracks, loose mounts, blowing joints' },
+  { id:'front',   label:'Front bodywork / nose — no significant contact damage' },
+  { id:'rear',    label:'Rear bodywork / wing — no damage, wing angle unchanged' },
+  { id:'susp',    label:'Suspension visual — no obvious bent or damaged components' },
+  { id:'wheels',  label:'Wheel nuts secure — quick visual check all four corners' },
+  { id:'elec',    label:'Dashboard / warning lights — no unexpected warnings active' },
+  { id:'driver',  label:'Driver physically OK — fit to return to track if required' },
+];
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let sessions = [];
+let activeId = null;
+let sessionCounter = 0;
+
+function getSession(id){ return sessions.find(s=>s.id===id); }
+function getActive(){ return getSession(activeId); }
+
+function newSession(){
+  sessionCounter++;
+  const now = new Date();
+  const timeStr = [now.getHours(),now.getMinutes()].map(n=>String(n).padStart(2,'0')).join(':');
+  const id = 'ses_'+Date.now();
+  const ses = {
+    id, num: sessionCounter,
+    type:'', car:'', driver:'', time:timeStr,
+    status:'active',
+    // Setup
+    setup:{
+      frontRideH:'', rearRideH:'',
+      frontCamber:'', rearCamber:'',
+      frontToe:'', rearToe:'',
+      frontARB:'', rearARB:'',
+      frontWing:'', rearWing:'',
+      brakeBias:'', diffSetting:'',
+      damperFrontComp:'', damperFrontReb:'',
+      damperRearComp:'', damperRearReb:'',
+      springFront:'', springRear:'',
+      ballast:'', setupNotes:'',
+    },
+    // Tyres
+    tyres:{
+      flPressureCold:'', flPressureHot:'', flTemp:'', flWear:'',
+      frPressureCold:'', frPressureHot:'', frTemp:'', frWear:'',
+      rlPressureCold:'', rlPressureHot:'', rlTemp:'', rlWear:'',
+      rrPressureCold:'', rrPressureHot:'', rrTemp:'', rrWear:'',
+      compound:'', condition:'', notes:'',
+    },
+    // Fuel
+    fuel:{ levelIn:'', levelOut:'', added:'', fuelType:'', consumption:'' },
+    // Inbound checks
+    checks: Object.fromEntries(INBOUND_CHECKS.map(c=>[c.id,{ticked:false,status:'',note:''}])),
+    // Lap data
+    laps:[{ lap:'1', time:'', s1:'', s2:'', s3:'', note:'' }],
+    // Reports
+    driverFeedback:'',
+    mechanicNotes:'',
+    changesForNext:'',
+    overallStatus:'ok',
+  };
+  sessions.push(ses);
+  activeId = id;
+  renderSessionList();
+  renderDetail();
+  updateSesCount();
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER SESSION LIST
+// ══════════════════════════════════════════════════════
+function renderSessionList(){
+  const el = document.getElementById('sessionsList');
+  if (sessions.length === 0){
+    el.innerHTML = `<div class="no-sessions"><div class="icon">🏎</div><div>No sessions logged yet.<br>Press <strong style="color:var(--lime)">+ NEW SESSION</strong> when the car comes in.</div></div>`;
+    return;
+  }
+  el.innerHTML = sessions.slice().reverse().map(s=>{
+    const issueCount = Object.values(s.checks).filter(c=>c.status==='issue').length;
+    const warnCount = Object.values(s.checks).filter(c=>c.status==='warn').length;
+    const doneCount = Object.values(s.checks).filter(c=>c.ticked).length;
+    let cardClass = s.id===activeId?'active':'';
+    if(s.overallStatus==='issue') cardClass += ' has-issue';
+    else if(doneCount===INBOUND_CHECKS.length) cardClass += ' complete';
+    let badges = '';
+    if(doneCount>0) badges+=`<span class="badge ok">${doneCount}/${INBOUND_CHECKS.length} ✓</span>`;
+    if(issueCount>0) badges+=`<span class="badge issue">${issueCount} issue${issueCount>1?'s':''}</span>`;
+    if(warnCount>0) badges+=`<span class="badge warn">${warnCount} warn</span>`;
+    if(s.laps.filter(l=>l.time).length>0) badges+=`<span class="badge info">${s.laps.filter(l=>l.time).length} laps</span>`;
+    const typeLabel = s.type||'Session';
+    const carLabel = s.car||document.getElementById('f-car').value||'—';
+    return `<div class="ses-card ${cardClass}" onclick="activateSession('${s.id}')">
+      <div class="sc-top">
+        <span class="sc-num">S${String(s.num).padStart(2,'0')} · ${s.time}</span>
+        <span class="sc-car">${carLabel}</span>
+      </div>
+      <div class="sc-type">${typeLabel}</div>
+      <div class="sc-badges">${badges||'<span class="badge info">New</span>'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  ACTIVATE SESSION
+// ══════════════════════════════════════════════════════
+function activateSession(id){
+  activeId = id;
+  renderSessionList();
+  renderDetail();
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER DETAIL
+// ══════════════════════════════════════════════════════
+function renderDetail(){
+  const panel = document.getElementById('detailPanel');
+  const s = getActive();
+  if(!s){ panel.innerHTML = `<div class="empty-state"><div class="big-icon">⬡</div><h2>NO ACTIVE SESSION</h2><p>Press <strong style="color:var(--lime)">+ NEW Session</strong> to log data when the car comes into the pits.</p></div>`; return; }
+
+  const issueCount = Object.values(s.checks).filter(c=>c.status==='issue').length;
+  const doneCount = Object.values(s.checks).filter(c=>c.ticked).length;
+
+  panel.innerHTML = `<div class="session-detail">
+    <div class="sd-header">
+      <div class="sdh-left">
+        <div class="sdh-tag">SESSION ${String(s.num).padStart(2,'0')} · ${s.time}</div>
+        <div class="sdh-title"><em>INBOUND</em> DATA LOG</div>
+        <div class="sdh-meta">${doneCount}/${INBOUND_CHECKS.length} checks done · ${issueCount} issue${issueCount!==1?'s':''} flagged</div>
+      </div>
+      <div class="sdh-right">
+        <select class="os-select" id="os-${s.id}" onchange="updateField('${s.id}','overallStatus',this.value)">
+          <option value="ok" ${s.overallStatus==='ok'?'selected':''}>🟢 CAR OK</option>
+          <option value="warn" ${s.overallStatus==='warn'?'selected':''}>🟡 MONITOR</option>
+          <option value="issue" ${s.overallStatus==='issue'?'selected':''}>🔴 ISSUE — HOLD</option>
+          <option value="nostart" ${s.overallStatus==='nostart'?'selected':''}>⛔ DO NOT START</option>
+        </select>
+        <button class="tbtn red" onclick="deleteSession('${s.id}')">✕ Delete</button>
+      </div>
+    </div>
+    <div class="sd-body">
+
+      <!-- SESSION INFO -->
+      <div class="sec-block">
+        <div class="sec-head"><span class="sec-icon">📋</span><span class="sec-title">Session Info</span></div>
+        <div class="data-grid">
+          <div class="df"><label>Session Type</label>
+            <select onchange="updateSetupField('${s.id}','type',this.value)" id="type-${s.id}">
+              <option value="" ${!s.type?'selected':''}>Select type…</option>
+              <option value="Free Practice 1" ${s.type==='Free Practice 1'?'selected':''}>Free Practice 1</option>
+              <option value="Free Practice 2" ${s.type==='Free Practice 2'?'selected':''}>Free Practice 2</option>
+              <option value="Free Practice 3" ${s.type==='Free Practice 3'?'selected':''}>Free Practice 3</option>
+              <option value="Qualifying" ${s.type==='Qualifying'?'selected':''}>Qualifying</option>
+              <option value="Warm-Up" ${s.type==='Warm-Up'?'selected':''}>Warm-Up</option>
+              <option value="Race 1" ${s.type==='Race 1'?'selected':''}>Race 1</option>
+              <option value="Race 2" ${s.type==='Race 2'?'selected':''}>Race 2</option>
+              <option value="Sprint Race" ${s.type==='Sprint Race'?'selected':''}>Sprint Race</option>
+              <option value="Pit Stop Practice" ${s.type==='Pit Stop Practice'?'selected':''}>Pit Stop Practice</option>
+            </select>
+          </div>
+          <div class="df"><label>Car Number</label><input type="text" value="${s.car}" placeholder="#" onchange="updateField('${s.id}','car',this.value)"></div>
+          <div class="df"><label>Driver</label><input type="text" value="${s.driver}" placeholder="Driver name" onchange="updateField('${s.id}','driver',this.value)"></div>
+          <div class="df"><label>Return to Track</label>
+            <select onchange="updateField('${s.id}','returnTrack',this.value)">
+              <option value="">—</option>
+              <option value="yes" ${s.returnTrack==='yes'?'selected':''}>Yes — returning</option>
+              <option value="no" ${s.returnTrack==='no'?'selected':''}>No — session done</option>
+              <option value="held" ${s.returnTrack==='held'?'selected':''}>Held — pending check</option>
+            </select>
+          </div>
+          <div class="df"><label>Weather</label>
+            <select onchange="updateField('${s.id}','weather',this.value)">
+              <option value="">—</option>
+              <option value="Dry" ${s.weather==='Dry'?'selected':''}>Dry</option>
+              <option value="Damp" ${s.weather==='Damp'?'selected':''}>Damp</option>
+              <option value="Wet" ${s.weather==='Wet'?'selected':''}>Wet</option>
+              <option value="Mixed" ${s.weather==='Mixed'?'selected':''}>Mixed</option>
+            </select>
+          </div>
+          <div class="df"><label>Air Temp (°C)</label><input type="text" value="${s.airTemp||''}" placeholder="°C" onchange="updateField('${s.id}','airTemp',this.value)"></div>
+          <div class="df"><label>Track Temp (°C)</label><input type="text" value="${s.trackTemp||''}" placeholder="°C" onchange="updateField('${s.id}','trackTemp',this.value)"></div>
+          <div class="df"><label>Track Condition</label>
+            <select onchange="updateField('${s.id}','trackCondition',this.value)">
+              <option value="">—</option>
+              <option value="Green" ${s.trackCondition==='Green'?'selected':''}>Green (early session)</option>
+              <option value="Rubbered In" ${s.trackCondition==='Rubbered In'?'selected':''}>Rubbered In</option>
+              <option value="Damp Patches" ${s.trackCondition==='Damp Patches'?'selected':''}>Damp Patches</option>
+              <option value="Wet" ${s.trackCondition==='Wet'?'selected':''}>Wet</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- INBOUND SAFETY CHECKS -->
+      <div class="sec-block">
+        <div class="sec-head"><span class="sec-icon">🔍</span><span class="sec-title">Inbound Safety Checks</span><span class="sec-subtitle">Complete on every return to pits</span></div>
+        <div class="check-grid">
+          ${INBOUND_CHECKS.map(c=>{
+            const ck = s.checks[c.id];
+            const statusClass = ck.ticked ? 'ck-ok' : ck.status==='issue' ? 'ck-issue' : ck.status==='warn' ? 'ck-warn' : '';
+            return `<div class="ci-row ${statusClass}" id="cir-${s.id}-${c.id}">
+              <div class="ci-tick" onclick="tickCheck('${s.id}','${c.id}')">
+                ${ck.ticked
+                  ? `<svg viewBox="0 0 24 24" fill="none" stroke="#AAFF00" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+                  : `<svg viewBox="0 0 24 24" fill="none" stroke="#1E2535" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`}
+              </div>
+              <div class="ci-label-text">${c.label}</div>
+              <div class="ci-sel"><select onchange="setCheckStatus('${s.id}','${c.id}',this.value)">
+                <option value="" ${!ck.status?'selected':''}>— Status —</option>
+                <option value="ok" ${ck.status==='ok'?'selected':''}>✓ OK</option>
+                <option value="issue" ${ck.status==='issue'?'selected':''}>⚑ Issue</option>
+                <option value="warn" ${ck.status==='warn'?'selected':''}>⚠ Monitor</option>
+                <option value="na" ${ck.status==='na'?'selected':''}>N/A</option>
+              </select></div>
+              <div class="ci-note"><input type="text" placeholder="Note…" value="${ck.note||''}" onchange="setCheckNote('${s.id}','${c.id}',this.value)"></div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="status-row" id="statusRow-${s.id}"></div>
+      </div>
+
+      <!-- FUEL -->
+      <div class="sec-block">
+        <div class="sec-head"><span class="sec-icon">⛽</span><span class="sec-title">Fuel</span></div>
+        <div class="data-grid">
+          <div class="df"><label>Level on Return (%)</label><input type="text" value="${s.fuel.levelIn}" placeholder="%" onchange="updateFuel('${s.id}','levelIn',this.value)"></div>
+          <div class="df"><label>Fuel Added (litres)</label><input type="text" value="${s.fuel.added}" placeholder="L" onchange="updateFuel('${s.id}','added',this.value)"></div>
+          <div class="df"><label>Level After Refuel (%)</label><input type="text" value="${s.fuel.levelOut}" placeholder="%" onchange="updateFuel('${s.id}','levelOut',this.value)"></div>
+          <div class="df"><label>Fuel Type</label>
+            <select onchange="updateFuel('${s.id}','fuelType',this.value)">
+              <option value="">—</option>
+              <option value="Pump 97RON" ${s.fuel.fuelType==='Pump 97RON'?'selected':''}>Pump 97RON</option>
+              <option value="Pump 99RON" ${s.fuel.fuelType==='Pump 99RON'?'selected':''}>Pump 99RON</option>
+              <option value="Race Fuel" ${s.fuel.fuelType==='Race Fuel'?'selected':''}>Race Fuel</option>
+              <option value="E85" ${s.fuel.fuelType==='E85'?'selected':''}>E85</option>
+            </select>
+          </div>
+          <div class="df"><label>Consumption Notes</label><input type="text" value="${s.fuel.consumption}" placeholder="e.g. 1.2L/lap" onchange="updateFuel('${s.id}','consumption',this.value)"></div>
+        </div>
+      </div>
+
+      <!-- TYRES -->
+      <div class="sec-block">
+        <div class="sec-head"><span class="sec-icon">🏎</span><span class="sec-title">Tyre Data</span><span class="sec-subtitle">Record hot pressures ASAP on return</span></div>
+        <div class="data-grid" style="margin-bottom:12px;">
+          <div class="df"><label>Compound</label><input type="text" value="${s.tyres.compound}" placeholder="e.g. Avon ZZR" onchange="updateTyre('${s.id}','compound',this.value)"></div>
+          <div class="df"><label>Set Number</label><input type="text" value="${s.tyres.setNum||''}" placeholder="e.g. Set 2" onchange="updateTyre('${s.id}','setNum',this.value)"></div>
+          <div class="df"><label>Overall Condition</label>
+            <select onchange="updateTyre('${s.id}','condition',this.value)">
+              <option value="">—</option>
+              <option value="New" ${s.tyres.condition==='New'?'selected':''}>New</option>
+              <option value="Good" ${s.tyres.condition==='Good'?'selected':''}>Good</option>
+              <option value="Used" ${s.tyres.condition==='Used'?'selected':''}>Used</option>
+              <option value="Worn" ${s.tyres.condition==='Worn'?'selected':''}>Worn — replace soon</option>
+              <option value="Replace" ${s.tyres.condition==='Replace'?'selected':''}>Replace immediately</option>
+            </select>
+          </div>
+        </div>
+        <div class="tyre-grid">
+          <div class="tyre-axle-label">▲ FRONT AXLE</div>
+          ${['FL','FR'].map(pos=>{
+            const k = pos.toLowerCase();
+            return `<div class="tyre-cell">
+              <div class="tc-label">${pos==='FL'?'Front Left':'Front Right'}</div>
+              <div class="tc-fields">
+                <div class="tc-row"><label>Cold PSI</label><input type="text" value="${s.tyres[k+'PressureCold']}" placeholder="—" onchange="updateTyre('${s.id}','${k}PressureCold',this.value)"></div>
+                <div class="tc-row"><label>Hot PSI</label><input type="text" value="${s.tyres[k+'PressureHot']}" placeholder="—" onchange="updateTyre('${s.id}','${k}PressureHot',this.value)"></div>
+                <div class="tc-row"><label>Temp (°C)</label><input type="text" value="${s.tyres[k+'Temp']}" placeholder="—" onchange="updateTyre('${s.id}','${k}Temp',this.value)"></div>
+                <div class="tc-row"><label>Wear</label>
+                  <select onchange="updateTyre('${s.id}','${k}Wear',this.value)">
+                    <option value="">—</option>
+                    <option value="Good" ${s.tyres[k+'Wear']==='Good'?'selected':''}>Good</option>
+                    <option value="50%" ${s.tyres[k+'Wear']==='50%'?'selected':''}>~50%</option>
+                    <option value="25%" ${s.tyres[k+'Wear']==='25%'?'selected':''}>~25%</option>
+                    <option value="Replace" ${s.tyres[k+'Wear']==='Replace'?'selected':''}>Replace</option>
+                  </select>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+          <div class="tyre-axle-label">▼ REAR AXLE</div>
+          ${['RL','RR'].map(pos=>{
+            const k = pos.toLowerCase();
+            return `<div class="tyre-cell">
+              <div class="tc-label">${pos==='RL'?'Rear Left':'Rear Right'}</div>
+              <div class="tc-fields">
+                <div class="tc-row"><label>Cold PSI</label><input type="text" value="${s.tyres[k+'PressureCold']}" placeholder="—" onchange="updateTyre('${s.id}','${k}PressureCold',this.value)"></div>
+                <div class="tc-row"><label>Hot PSI</label><input type="text" value="${s.tyres[k+'PressureHot']}" placeholder="—" onchange="updateTyre('${s.id}','${k}PressureHot',this.value)"></div>
+                <div class="tc-row"><label>Temp (°C)</label><input type="text" value="${s.tyres[k+'Temp']}" placeholder="—" onchange="updateTyre('${s.id}','${k}Temp',this.value)"></div>
+                <div class="tc-row"><label>Wear</label>
+                  <select onchange="updateTyre('${s.id}','${k}Wear',this.value)">
+                    <option value="">—</option>
+                    <option value="Good" ${s.tyres[k+'Wear']==='Good'?'selected':''}>Good</option>
+                    <option value="50%" ${s.tyres[k+'Wear']==='50%'?'selected':''}>~50%</option>
+                    <option value="25%" ${s.tyres[k+'Wear']==='25%'?'selected':''}>~25%</option>
+                    <option value="Replace" ${s.tyres[k+'Wear']==='Replace'?'selected':''}>Replace</option>
+                  </select>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="margin-top:8px;"><div class="df"><label>Tyre Notes</label><textarea rows="2" onchange="updateTyre('${s.id}','notes',this.value)">${s.tyres.notes}</textarea></div></div>
+      </div>
+
+      <!-- SETUP DATA -->
+      <div class="sec-block">
+        <div class="sec-head"><span class="sec-icon">⚙️</span><span class="sec-title">Setup Data</span><span class="sec-subtitle">Record car setup for this session</span></div>
+
+        <div style="font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;margin-top:2px;">Ride Height & Geometry</div>
+        <div class="data-grid">
+          <div class="df"><label>Front Ride Height (mm)</label><input type="text" value="${s.setup.frontRideH}" placeholder="mm" onchange="updateSetup('${s.id}','frontRideH',this.value)"></div>
+          <div class="df"><label>Rear Ride Height (mm)</label><input type="text" value="${s.setup.rearRideH}" placeholder="mm" onchange="updateSetup('${s.id}','rearRideH',this.value)"></div>
+          <div class="df"><label>Front Camber (°)</label><input type="text" value="${s.setup.frontCamber}" placeholder="e.g. -2.5°" onchange="updateSetup('${s.id}','frontCamber',this.value)"></div>
+          <div class="df"><label>Rear Camber (°)</label><input type="text" value="${s.setup.rearCamber}" placeholder="e.g. -1.8°" onchange="updateSetup('${s.id}','rearCamber',this.value)"></div>
+          <div class="df"><label>Front Toe (mm/°)</label><input type="text" value="${s.setup.frontToe}" placeholder="e.g. 0 toe" onchange="updateSetup('${s.id}','frontToe',this.value)"></div>
+          <div class="df"><label>Rear Toe (mm/°)</label><input type="text" value="${s.setup.rearToe}" placeholder="e.g. +1mm in" onchange="updateSetup('${s.id}','rearToe',this.value)"></div>
+        </div>
+
+        <div style="font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;margin-top:12px;">Springs & Dampers</div>
+        <div class="data-grid">
+          <div class="df"><label>Front Spring Rate</label><input type="text" value="${s.setup.springFront}" placeholder="e.g. 180N/mm" onchange="updateSetup('${s.id}','springFront',this.value)"></div>
+          <div class="df"><label>Rear Spring Rate</label><input type="text" value="${s.setup.springRear}" placeholder="e.g. 140N/mm" onchange="updateSetup('${s.id}','springRear',this.value)"></div>
+          <div class="df"><label>Front Damper Comp</label><input type="text" value="${s.setup.damperFrontComp}" placeholder="clicks / setting" onchange="updateSetup('${s.id}','damperFrontComp',this.value)"></div>
+          <div class="df"><label>Front Damper Reb</label><input type="text" value="${s.setup.damperFrontReb}" placeholder="clicks / setting" onchange="updateSetup('${s.id}','damperFrontReb',this.value)"></div>
+          <div class="df"><label>Rear Damper Comp</label><input type="text" value="${s.setup.damperRearComp}" placeholder="clicks / setting" onchange="updateSetup('${s.id}','damperRearComp',this.value)"></div>
+          <div class="df"><label>Rear Damper Reb</label><input type="text" value="${s.setup.damperRearReb}" placeholder="clicks / setting" onchange="updateSetup('${s.id}','damperRearReb',this.value)"></div>
+          <div class="df"><label>Front ARB</label><input type="text" value="${s.setup.frontARB}" placeholder="soft/med/hard / clicks" onchange="updateSetup('${s.id}','frontARB',this.value)"></div>
+          <div class="df"><label>Rear ARB</label><input type="text" value="${s.setup.rearARB}" placeholder="soft/med/hard / clicks" onchange="updateSetup('${s.id}','rearARB',this.value)"></div>
+        </div>
+
+        <div style="font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;margin-top:12px;">Aerodynamics & Balance</div>
+        <div class="data-grid">
+          <div class="df"><label>Front Wing (° / clicks)</label><input type="text" value="${s.setup.frontWing}" placeholder="e.g. 3°" onchange="updateSetup('${s.id}','frontWing',this.value)"></div>
+          <div class="df"><label>Rear Wing (° / clicks)</label><input type="text" value="${s.setup.rearWing}" placeholder="e.g. 5°" onchange="updateSetup('${s.id}','rearWing',this.value)"></div>
+          <div class="df"><label>Brake Bias (%F)</label><input type="text" value="${s.setup.brakeBias}" placeholder="e.g. 58% front" onchange="updateSetup('${s.id}','brakeBias',this.value)"></div>
+          <div class="df"><label>Diff Setting</label><input type="text" value="${s.setup.diffSetting}" placeholder="e.g. 40% lock" onchange="updateSetup('${s.id}','diffSetting',this.value)"></div>
+          <div class="df"><label>Ballast (kg / position)</label><input type="text" value="${s.setup.ballast}" placeholder="e.g. 10kg rear" onchange="updateSetup('${s.id}','ballast',this.value)"></div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <div class="df"><label>Setup Notes / Changes from Previous Session</label><textarea rows="3" onchange="updateSetup('${s.id}','setupNotes',this.value)">${s.setup.setupNotes}</textarea></div>
+        </div>
+      </div>
+
+      <!-- LAP DATA -->
+      <div class="sec-block">
+        <div class="sec-head"><span class="sec-icon">⏱</span><span class="sec-title">Lap Data</span><span class="sec-subtitle">Best lap & sector times</span></div>
+        <div class="lap-header">
+          <div class="lh"></div>
+          <div class="lh">Lap Time</div>
+          <div class="lh">Sector 1</div>
+          <div class="lh">Sector 2</div>
+          <div class="lh">Sector 3</div>
+          <div class="lh">Note</div>
+        </div>
+        <div id="lapsContainer-${s.id}">
+          ${s.laps.map((lap,li)=>`
+          <div class="lap-row" id="laprow-${s.id}-${li}">
+            <div class="lap-num">L${lap.lap||li+1}</div>
+            <input type="text" value="${lap.time}" placeholder="0:00.000" onchange="updateLap('${s.id}',${li},'time',this.value)">
+            <input type="text" value="${lap.s1}" placeholder="S1" onchange="updateLap('${s.id}',${li},'s1',this.value)">
+            <input type="text" value="${lap.s2}" placeholder="S2" onchange="updateLap('${s.id}',${li},'s2',this.value)">
+            <input type="text" value="${lap.s3}" placeholder="S3" onchange="updateLap('${s.id}',${li},'s3',this.value)">
+            <input type="text" value="${lap.note}" placeholder="flag/inc…" onchange="updateLap('${s.id}',${li},'note',this.value)">
+          </div>`).join('')}
+        </div>
+        <div class="add-lap-btn" onclick="addLap('${s.id}')">+ ADD LAP</div>
+      </div>
+
+      <!-- DRIVER FEEDBACK -->
+      <div class="sec-block">
+        <div class="sec-head"><span class="sec-icon">🎧</span><span class="sec-title">Driver Feedback</span></div>
+        <div class="driver-box">
+          <textarea id="df-${s.id}" rows="4" placeholder="Record driver feedback: balance, brake feel, traction, oversteer/understeer tendencies, circuit notes, any concerns…" onchange="updateField('${s.id}','driverFeedback',this.value)">${s.driverFeedback}</textarea>
+        </div>
+      </div>
+
+      <!-- MECHANIC NOTES -->
+      <div class="sec-block">
+        <div class="sec-head"><span class="sec-icon">🔧</span><span class="sec-title">Mechanic Notes</span></div>
+        <div class="changes-area">
+          <textarea id="mn-${s.id}" rows="3" placeholder="Any work carried out during this stop, observations, parts replaced, adjustments made…" onchange="updateField('${s.id}','mechanicNotes',this.value)">${s.mechanicNotes}</textarea>
+        </div>
+      </div>
+
+      <!-- CHANGES FOR NEXT -->
+      <div class="sec-block">
+        <div class="sec-head"><span class="sec-icon">➡</span><span class="sec-title">Changes For Next Session</span></div>
+        <div class="changes-area">
+          <textarea id="cn-${s.id}" rows="3" placeholder="Setup changes to make before going out again, components to check, items to action…" onchange="updateField('${s.id}','changesForNext',this.value)">${s.changesForNext}</textarea>
+        </div>
+      </div>
+
+    </div>
+  </div>`;
+  updateStatusRow(s.id);
+}
+
+// ══════════════════════════════════════════════════════
+//  UPDATE HELPERS
+// ══════════════════════════════════════════════════════
+function updateField(id, key, val){
+  const s = getSession(id); if(!s) return;
+  s[key] = val;
+  if(key==='overallStatus') renderSessionList();
+  if(key==='type'||key==='car') renderSessionList();
+}
+function updateSetupField(id, key, val){
+  const s = getSession(id); if(!s) return;
+  s[key] = val;
+  renderSessionList();
+}
+function updateSetup(id, key, val){
+  const s = getSession(id); if(!s) return;
+  s.setup[key] = val;
+}
+function updateTyre(id, key, val){
+  const s = getSession(id); if(!s) return;
+  s.tyres[key] = val;
+}
+function updateFuel(id, key, val){
+  const s = getSession(id); if(!s) return;
+  s.fuel[key] = val;
+}
+function updateLap(id, li, key, val){
+  const s = getSession(id); if(!s) return;
+  s.laps[li][key] = val;
+}
+function addLap(id){
+  const s = getSession(id); if(!s) return;
+  const li = s.laps.length;
+  s.laps.push({lap:String(li+1),time:'',s1:'',s2:'',s3:'',note:''});
+  const container = document.getElementById(`lapsContainer-${id}`);
+  if(container){
+    const div = document.createElement('div');
+    div.className='lap-row';
+    div.id=`laprow-${id}-${li}`;
+    div.innerHTML=`
+      <div class="lap-num">L${li+1}</div>
+      <input type="text" value="" placeholder="0:00.000" onchange="updateLap('${id}',${li},'time',this.value)">
+      <input type="text" value="" placeholder="S1" onchange="updateLap('${id}',${li},'s1',this.value)">
+      <input type="text" value="" placeholder="S2" onchange="updateLap('${id}',${li},'s2',this.value)">
+      <input type="text" value="" placeholder="S3" onchange="updateLap('${id}',${li},'s3',this.value)">
+      <input type="text" value="" placeholder="flag/inc…" onchange="updateLap('${id}',${li},'note',this.value)">`;
+    container.appendChild(div);
+  }
+}
+
+function tickCheck(id, ckId){
+  const s = getSession(id); if(!s) return;
+  s.checks[ckId].ticked = !s.checks[ckId].ticked;
+  const row = document.getElementById(`cir-${id}-${ckId}`);
+  if(row){
+    const ck = s.checks[ckId];
+    row.classList.toggle('ck-ok', ck.ticked);
+    const tick = row.querySelector('.ci-tick');
+    tick.innerHTML = ck.ticked
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke="#AAFF00" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="#1E2535" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`;
+  }
+  updateStatusRow(id);
+  renderSessionList();
+}
+
+function setCheckStatus(id, ckId, val){
+  const s = getSession(id); if(!s) return;
+  s.checks[ckId].status = val;
+  const row = document.getElementById(`cir-${id}-${ckId}`);
+  if(row){
+    row.classList.remove('ck-ok','ck-issue','ck-warn');
+    if(val==='issue') row.classList.add('ck-issue');
+    else if(val==='warn') row.classList.add('ck-warn');
+    else if(val==='ok' && s.checks[ckId].ticked) row.classList.add('ck-ok');
+  }
+  updateStatusRow(id);
+  renderSessionList();
+}
+
+function setCheckNote(id, ckId, val){
+  const s = getSession(id); if(!s) return;
+  s.checks[ckId].note = val;
+}
+
+function updateStatusRow(id){
+  const s = getSession(id); if(!s) return;
+  const issues = INBOUND_CHECKS.filter(c=>s.checks[c.id].status==='issue');
+  const warns = INBOUND_CHECKS.filter(c=>s.checks[c.id].status==='warn');
+  const done = INBOUND_CHECKS.filter(c=>s.checks[c.id].ticked);
+  const row = document.getElementById(`statusRow-${id}`);
+  if(!row) return;
+  let html = `<div class="status-pill sp-ok"><div class="sp-dot"></div>${done.length}/${INBOUND_CHECKS.length} Complete</div>`;
+  if(issues.length) html += `<div class="status-pill sp-issue"><div class="sp-dot"></div>${issues.length} Issue${issues.length>1?'s':''}: ${issues.map(c=>c.label.split('—')[0].trim()).join(', ')}</div>`;
+  if(warns.length) html += `<div class="status-pill sp-warn"><div class="sp-dot"></div>${warns.length} Monitor: ${warns.map(c=>c.label.split('—')[0].trim()).join(', ')}</div>`;
+  row.innerHTML = html;
+}
+
+function updateSesCount(){
+  document.getElementById('sesCount').textContent = sessions.length + (sessions.length===1?' Session':' Sessions');
+}
+
+function deleteSession(id){
+  if(!confirm('Delete this session? This cannot be undone.')) return;
+  sessions = sessions.filter(s=>s.id!==id);
+  if(activeId===id){ activeId = sessions.length ? sessions[sessions.length-1].id : null; }
+  renderSessionList();
+  renderDetail();
+  updateSesCount();
+}
+
+function confirmClear(){
+  if(!confirm('Clear ALL sessions? This cannot be undone.')) return;
+  sessions=[]; activeId=null; sessionCounter=0;
+  renderSessionList();
+  renderDetail();
+  updateSesCount();
+}
+
+// ══════════════════════════════════════════════════════
+//  PDF GENERATION
+// ══════════════════════════════════════════════════════
+function generatePDF(){
+  if(sessions.length===0){ alert('No sessions to export.'); return; }
+  const btn=document.getElementById('pdfBtn');
+  btn.textContent='⏳ Generating…'; btn.disabled=true;
+  setTimeout(()=>{
+    try{
+      const {jsPDF}=window.jspdf;
+      const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      const PW=210,PH=297,ML=13,MR=13,CW=PW-ML-MR;
+      let y=14,pg=1;
+
+      const ev={
+        event:document.getElementById('f-event').value,
+        circuit:document.getElementById('f-circuit').value,
+        date:document.getElementById('f-date').value,
+        car:document.getElementById('f-car').value,
+        driver:document.getElementById('f-driver').value,
+        mech:document.getElementById('f-mech').value,
+      };
+
+      // Palette
+      const LIME=[170,255,0],LIME2=[136,204,0];
+      const DARK=[8,10,13],INK=[13,17,23],INK2=[17,22,32],INK3=[22,28,42];
+      const RULE=[30,37,53],MID=[107,114,128],DIM=[160,170,190];
+      const TXT=[226,232,240],WHITE=[255,255,255];
+      const RED=[255,68,68],AMBER=[255,170,0],GREEN=[170,255,0];
+      const PALE_LIME=[245,255,230],PALE_RED=[255,245,245],PALE_AMBER=[255,252,240];
+
+      function hdr(){
+        doc.setFillColor(...DARK);doc.rect(0,0,PW,10,'F');
+        doc.setFillColor(...LIME2);doc.rect(0,0,PW,2,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...DIM);
+        doc.text(`PIT LANE LIVE  |  ${ev.event||'EVENT'}  |  ${ev.circuit||'—'}  |  ${ev.date||'—'}  |  ${ev.car||'—'}`,ML,7);
+        doc.setTextColor(...LIME2);doc.text(`Pg ${pg}`,PW-MR,7,{align:'right'});
+        y=15;
+      }
+      function ftr(){
+        doc.setFillColor(...DARK);doc.rect(0,PH-8,PW,8,'F');
+        doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...RULE);
+        doc.text('Level 3 Motorsport — Pit Lane Live Session Data',ML,PH-3);
+        doc.text('Confidential Race Documentation',PW-MR,PH-3,{align:'right'});
+      }
+      function np(n=12){if(y+n>PH-12){ftr();doc.addPage();pg++;hdr();}}
+      function secBanner(title,icon=''){
+        np(14);
+        doc.setFillColor(...INK3);doc.rect(ML,y,CW,11,'F');
+        doc.setFillColor(...LIME2);doc.rect(ML,y,3,11,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...LIME);
+        doc.text((icon+' '+title).trim().toUpperCase(),ML+6,y+7.5);
+        y+=14;
+      }
+      function miniLabel(lbl){
+        doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...MID);
+        doc.text(lbl.toUpperCase(),0,0);
+      }
+      function kv(label,val,x,fy,w=40){
+        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...MID);
+        doc.text(label,x,fy);
+        doc.setFont('helvetica','bold');doc.setTextColor(...TXT);
+        const lines=doc.splitTextToSize(val||'—',w-2);
+        doc.text(lines[0],x,fy+4);
+      }
+
+      // ── COVER ──
+      doc.setFillColor(...DARK);doc.rect(0,0,PW,PH,'F');
+      doc.setFillColor(...LIME2);doc.rect(0,0,PW,3,'F');
+      doc.setFillColor(...INK2);doc.rect(0,3,PW,PH-11,'F');
+      // diagonal stripe accent
+      doc.setFillColor(17,22,32);
+      for(let xi=0;xi<PW+50;xi+=12){
+        doc.setFillColor(xi%24===0?18:14,xi%24===0?23:18,xi%24===0?34:26);
+        doc.rect(xi-30,PH-50,12,60,'F');
+      }
+      doc.setFillColor(...LIME2);doc.rect(0,PH-50,PW,2,'F');
+
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...LIME);
+      doc.text('LEVEL 3 MOTORSPORT',ML,50);
+      doc.setFont('helvetica','bold');doc.setFontSize(50);doc.setTextColor(...TXT);
+      doc.text('PIT LANE',ML,80);
+      doc.setTextColor(...LIME);doc.text('LIVE',ML,108);
+      doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...MID);
+      doc.text('Session Data & Setup Log',ML,122);
+
+      // event box
+      doc.setFillColor(...INK3);doc.rect(ML,138,CW,80,'F');
+      doc.setDrawColor(...LIME2);doc.setLineWidth(0.4);doc.rect(ML,138,CW,80,'S');doc.setLineWidth(0.1);
+      doc.setFillColor(...LIME2);doc.rect(ML,138,CW,9,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...DARK);
+      doc.text('EVENT DETAILS',ML+4,143.5);
+
+      const ef=[['Event / Round',ev.event],['Circuit',ev.circuit],['Date',ev.date],['Car Number',ev.car],['Driver',ev.driver],['Chief Mechanic',ev.mech]];
+      ef.forEach(([l,v],i)=>{
+        const cx=i<3?ML+4:ML+CW/2+4;const fy=152+(i%3)*11;
+        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...MID);doc.text(l,cx,fy);
+        doc.setFont('helvetica','bold');doc.setTextColor(...TXT);doc.text(v||'—',cx,fy+4.5);
+      });
+
+      // session summary
+      const totalIssues=sessions.reduce((a,s)=>a+Object.values(s.checks).filter(c=>c.status==='issue').length,0);
+      doc.setFillColor(...INK);doc.rect(ML,224,CW,20,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...LIME);
+      doc.text(`${sessions.length} Sessions Logged`,ML+6,234);
+      doc.setTextColor(...RED);doc.text(`${totalIssues} Issues Flagged`,ML+70,234);
+      doc.setTextColor(...MID);doc.text(`${new Date().toLocaleString()}`,PW-MR,234,{align:'right'});
+
+      ftr();
+
+      // ── SESSIONS ──
+      sessions.forEach((s,si)=>{
+        doc.addPage();pg++;hdr();
+
+        // Session banner
+        doc.setFillColor(...INK2);doc.rect(ML,y,CW,16,'F');
+        doc.setFillColor(...LIME);doc.rect(ML,y,4,16,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...LIME2);
+        doc.text(`SESSION ${String(s.num).padStart(2,'0')}  ·  ${s.time}`,ML+8,y+5);
+        doc.setFontSize(13);doc.setTextColor(...TXT);
+        doc.text((s.type||'Session').toUpperCase(),ML+8,y+12);
+        // Status badge
+        const scol=s.overallStatus==='issue'?RED:s.overallStatus==='nostart'?RED:s.overallStatus==='warn'?AMBER:LIME;
+        const slbl=s.overallStatus==='issue'?'ISSUE - HOLD':s.overallStatus==='nostart'?'DO NOT START':s.overallStatus==='warn'?'MONITOR':'CAR OK';
+        doc.setFillColor(...scol);doc.rect(PW-MR-30,y+4,28,8,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...DARK);
+        doc.text(slbl,PW-MR-16,y+9,{align:'center'});
+        y+=19;
+
+        // Session info row
+        np(10);
+        const infoFields=[['Car',s.car||ev.car],['Driver',s.driver||ev.driver],['Weather',s.weather],['Air Temp',s.airTemp?s.airTemp+'°C':'—'],['Track Temp',s.trackTemp?s.trackTemp+'°C':'—'],['Track',s.trackCondition]];
+        const ifw=(CW)/infoFields.length;
+        infoFields.forEach(([l,v],i)=>{
+          const ix=ML+i*ifw;
+          doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(...MID);doc.text(l.toUpperCase(),ix,y+3);
+          doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...TXT);doc.text(v||'—',ix,y+7.5);
+        });
+        y+=12;
+
+        // INBOUND CHECKS
+        secBanner('Inbound Safety Checks');
+        INBOUND_CHECKS.forEach(ck=>{
+          const c=s.checks[ck.id];
+          const lines=doc.splitTextToSize(ck.label,CW-50);
+          const rh=Math.max(7,lines.length*4+3);np(rh+1);
+          let bg=WHITE;
+          if(c.status==='issue')bg=PALE_RED;
+          else if(c.status==='warn')bg=PALE_AMBER;
+          else if(c.ticked)bg=PALE_LIME;
+          doc.setFillColor(...bg);doc.rect(ML,y,CW,rh,'F');
+          // tick
+          doc.setFillColor(...WHITE);doc.setDrawColor(...RULE);doc.rect(ML+2,y+rh/2-2,4,4,'FD');
+          if(c.ticked){doc.setDrawColor(...LIME);doc.setLineWidth(0.6);doc.line(ML+2.6,y+rh/2,ML+3.5,y+rh/2+1.2);doc.line(ML+3.5,y+rh/2+1.2,ML+5.4,y+rh/2-1.1);doc.setLineWidth(0.1);}
+          doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(c.ticked?150:DARK[0],c.ticked?150:DARK[1],c.ticked?150:DARK[2]);
+          lines.forEach((l,li)=>doc.text(l,ML+8.5,y+4.5+li*4));
+          // status
+          const statCol=c.status==='issue'?RED:c.status==='warn'?AMBER:c.status==='ok'?LIME:DIM;
+          doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...statCol);
+          doc.text(c.status?c.status.toUpperCase():'—',ML+CW-22,y+rh/2+1);
+          if(c.note){doc.setFont('helvetica','italic');doc.setFontSize(6.5);doc.setTextColor(...MID);doc.text('↳ '+c.note,ML+8.5,y+rh+2.5);}
+          y+=rh+(c.note?4:0);
+          doc.setDrawColor(...RULE);doc.rect(ML,y-rh-(c.note?4:0),CW,rh,'S');
+        });
+        y+=2;
+
+        // FUEL
+        np(20);secBanner('Fuel');
+        doc.autoTable({startY:y,head:[['Level In','Added (L)','Level Out','Fuel Type','Notes']],
+          body:[[s.fuel.levelIn||'—',s.fuel.added||'—',s.fuel.levelOut||'—',s.fuel.fuelType||'—',s.fuel.consumption||'—']],
+          margin:{left:ML,right:MR},tableWidth:CW,
+          styles:{fontSize:8,cellPadding:2.5,textColor:DARK,lineColor:RULE,lineWidth:0.1},
+          headStyles:{fillColor:INK3,textColor:LIME,fontStyle:'bold',fontSize:7.5},
+        });y=doc.lastAutoTable.finalY+4;
+
+        // TYRES
+        np(30);secBanner('Tyre Data');
+        const tyreBody=[
+          ['FL',s.tyres.flPressureCold||'—',s.tyres.flPressureHot||'—',s.tyres.flTemp||'—',s.tyres.flWear||'—'],
+          ['FR',s.tyres.frPressureCold||'—',s.tyres.frPressureHot||'—',s.tyres.frTemp||'—',s.tyres.frWear||'—'],
+          ['RL',s.tyres.rlPressureCold||'—',s.tyres.rlPressureHot||'—',s.tyres.rlTemp||'—',s.tyres.rlWear||'—'],
+          ['RR',s.tyres.rrPressureCold||'—',s.tyres.rrPressureHot||'—',s.tyres.rrTemp||'—',s.tyres.rrWear||'—'],
+        ];
+        doc.autoTable({startY:y,head:[['Corner','Cold PSI','Hot PSI','Temp (°C)','Wear']],body:tyreBody,
+          margin:{left:ML,right:MR},tableWidth:CW,
+          styles:{fontSize:8,cellPadding:2.5,textColor:DARK,lineColor:RULE,lineWidth:0.1},
+          headStyles:{fillColor:INK3,textColor:LIME,fontStyle:'bold',fontSize:7.5},
+          columnStyles:{0:{cellWidth:18,fontStyle:'bold'}},
+        });y=doc.lastAutoTable.finalY+4;
+        if(s.tyres.compound||s.tyres.notes){
+          np(8);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...MID);
+          doc.text(`Compound: ${s.tyres.compound||'—'}  |  Set: ${s.tyres.setNum||'—'}  |  Condition: ${s.tyres.condition||'—'}`,ML,y);y+=4;
+          if(s.tyres.notes){const nl=doc.splitTextToSize('Notes: '+s.tyres.notes,CW);nl.forEach((l,li)=>doc.text(l,ML,y+li*4));y+=nl.length*4+2;}
+        }
+
+        // SETUP
+        np(30);secBanner('Setup Data');
+        const su=s.setup;
+        const setupBody=[
+          ['Front Ride Height',su.frontRideH||'—','Rear Ride Height',su.rearRideH||'—'],
+          ['Front Camber',su.frontCamber||'—','Rear Camber',su.rearCamber||'—'],
+          ['Front Toe',su.frontToe||'—','Rear Toe',su.rearToe||'—'],
+          ['Front Spring',su.springFront||'—','Rear Spring',su.springRear||'—'],
+          ['F.Damper Comp',su.damperFrontComp||'—','F.Damper Reb',su.damperFrontReb||'—'],
+          ['R.Damper Comp',su.damperRearComp||'—','R.Damper Reb',su.damperRearReb||'—'],
+          ['Front ARB',su.frontARB||'—','Rear ARB',su.rearARB||'—'],
+          ['Front Wing',su.frontWing||'—','Rear Wing',su.rearWing||'—'],
+          ['Brake Bias',su.brakeBias||'—','Diff Setting',su.diffSetting||'—'],
+          ['Ballast',su.ballast||'—','',''],
+        ];
+        doc.autoTable({startY:y,head:[['Parameter','Value','Parameter','Value']],body:setupBody,
+          margin:{left:ML,right:MR},tableWidth:CW,
+          styles:{fontSize:8,cellPadding:2.5,textColor:DARK,lineColor:RULE,lineWidth:0.1},
+          headStyles:{fillColor:INK3,textColor:LIME,fontStyle:'bold',fontSize:7.5},
+          columnStyles:{0:{cellWidth:38,fontStyle:'bold'},2:{cellWidth:38,fontStyle:'bold'}},
+          alternateRowStyles:{fillColor:[248,250,248]},
+        });y=doc.lastAutoTable.finalY+4;
+        if(su.setupNotes){const lines=doc.splitTextToSize('Setup Notes: '+su.setupNotes,CW);np(lines.length*4+4);doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.setTextColor(...MID);lines.forEach((l,li)=>doc.text(l,ML,y+li*4));y+=lines.length*4+4;}
+
+        // LAPS
+        const lapData=s.laps.filter(l=>l.time||l.s1||l.s2||l.s3);
+        if(lapData.length>0){
+          np(20);secBanner('Lap Data');
+          doc.autoTable({startY:y,head:[['Lap','Lap Time','Sector 1','Sector 2','Sector 3','Note']],
+            body:lapData.map(l=>[`L${l.lap}`,l.time||'—',l.s1||'—',l.s2||'—',l.s3||'—',l.note||'']),
+            margin:{left:ML,right:MR},tableWidth:CW,
+            styles:{fontSize:8,cellPadding:2.5,textColor:DARK,lineColor:RULE,lineWidth:0.1,fontFamily:'courier'},
+            headStyles:{fillColor:INK3,textColor:LIME,fontStyle:'bold',fontSize:7.5},
+            columnStyles:{0:{cellWidth:14,fontStyle:'bold'}},
+          });y=doc.lastAutoTable.finalY+4;
+        }
+
+        // FEEDBACK / NOTES
+        if(s.driverFeedback||s.mechanicNotes||s.changesForNext){
+          np(16);secBanner('Driver Feedback & Notes');
+          const feedbackSections=[
+            ['Driver Feedback',s.driverFeedback],
+            ['Mechanic Notes',s.mechanicNotes],
+            ['Changes For Next Session',s.changesForNext],
+          ].filter(([,v])=>v);
+          feedbackSections.forEach(([lbl,val])=>{
+            if(!val) return;
+            const lines=doc.splitTextToSize(val,CW-4);
+            np(lines.length*4+10);
+            doc.setFillColor(248,250,248);doc.rect(ML,y,CW,lines.length*4+6,'F');
+            doc.setDrawColor(...RULE);doc.rect(ML,y,CW,lines.length*4+6,'S');
+            doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...MID);
+            doc.text(lbl.toUpperCase(),ML+3,y+5);
+            doc.setFont('helvetica','normal');doc.setTextColor(...DARK);
+            lines.forEach((l,li)=>doc.text(l,ML+3,y+9+li*4));
+            y+=lines.length*4+9;
+          });
+        }
+        ftr();
+      });
+
+      // ── SUMMARY PAGE ──
+      doc.addPage();pg++;hdr();
+      doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(...LIME);
+      doc.text('EVENT SUMMARY',ML,y+6);y+=12;
+      const sumData=sessions.map(s=>{
+        const issues=Object.values(s.checks).filter(c=>c.status==='issue').length;
+        const done=Object.values(s.checks).filter(c=>c.ticked).length;
+        const bestLap=s.laps.filter(l=>l.time).map(l=>l.time).sort()[0]||'—';
+        return[`S${String(s.num).padStart(2,'0')}`,s.type||'—',s.car||ev.car||'—',s.overallStatus.toUpperCase(),`${done}/${INBOUND_CHECKS.length}`,issues.toString(),bestLap,s.changesForNext?'Yes':'—'];
+      });
+      doc.autoTable({startY:y,head:[['#','Session','Car','Status','Checks','Issues','Best Lap','Changes']],body:sumData,
+        margin:{left:ML,right:MR},tableWidth:CW,
+        styles:{fontSize:8,cellPadding:2.5,textColor:DARK,lineColor:RULE,lineWidth:0.1},
+        headStyles:{fillColor:INK3,textColor:LIME,fontStyle:'bold',fontSize:7.5},
+        columnStyles:{0:{cellWidth:12},3:{cellWidth:22},4:{cellWidth:16},5:{cellWidth:14},6:{cellWidth:22}},
+      });
+      ftr();
+
+      const car=ev.car?ev.car.replace(/[^a-z0-9]/gi,'_'):'Car';
+      const date=ev.date||new Date().toISOString().slice(0,10);
+      doc.save(`PitLane_Live_${car}_${date}.pdf`);
+    }catch(err){alert('PDF error: '+err.message);console.error(err);}
+    btn.textContent='⬇ PDF Report';btn.disabled=false;
+  },60);
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+renderDetail();
+</script>
+</body>
+</html>

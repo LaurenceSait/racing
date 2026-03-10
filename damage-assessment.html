@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Racing Car Damage Assessment — Level 3 Motorsport</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root {
+    --red: #D0021B;
+    --dark-red: #8B0000;
+    --amber: #F5A623;
+    --green: #27AE60;
+    --bg: #0A0A0A;
+    --surface: #141414;
+    --surface2: #1E1E1E;
+    --surface3: #282828;
+    --border: #2A2A2A;
+    --border2: #333;
+    --text: #F0F0F0;
+    --text-dim: #888;
+    --text-dimmer: #555;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--red);
+    padding: 0 24px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 3px solid var(--dark-red);
+  }
+  .topbar-brand {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: #fff;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .progress-pill {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #fff;
+    min-width: 90px;
+    text-align: center;
+  }
+  .btn-print {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: background 0.2s;
+  }
+  .btn-print:hover { background: rgba(0,0,0,0.5); }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #0A0A0A 0%, #1a0000 50%, #0A0A0A 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 24px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(208,2,27,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--red);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 6vw, 64px);
+    letter-spacing: 3px;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .hero-title span { color: var(--red); }
+  .hero-sub {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    font-weight: 300;
+  }
+
+  /* INCIDENT FORM */
+  .incident-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 16px;
+    max-width: 900px;
+  }
+  .field-group label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+  }
+  .field-group input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field-group input:focus { border-color: var(--red); }
+
+  /* LAYOUT */
+  .app-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 48px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: sticky;
+    top: 48px;
+    height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  .sidebar-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dimmer);
+    padding: 0 20px 12px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .nav-item {
+    padding: 10px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-dim);
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    position: relative;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { 
+    background: rgba(208,2,27,0.1); 
+    color: var(--text); 
+    border-left-color: var(--red);
+  }
+  .nav-item.hs-item { border-left-color: var(--red) !important; }
+  .nav-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dimmer);
+    min-width: 20px;
+  }
+  .nav-badge {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--surface3);
+    border-radius: 10px;
+    padding: 2px 7px;
+    color: var(--text-dim);
+  }
+  .nav-badge.done { background: rgba(39,174,96,0.2); color: var(--green); }
+  .nav-badge.warn { background: rgba(208,2,27,0.2); color: var(--red); }
+
+  /* MAIN CONTENT */
+  .main {
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  /* SECTION PANELS */
+  .section-panel {
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+  .section-panel.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+  .section-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dimmer);
+    margin-bottom: 4px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 32px;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+  .section-title .accent { color: var(--red); }
+  .section-desc {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--text-dim);
+    max-width: 600px;
+  }
+  .hs-warning-banner {
+    margin: 0 32px 0;
+    background: rgba(208,2,27,0.08);
+    border: 1px solid rgba(208,2,27,0.3);
+    border-radius: 6px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: #ff9999;
+    margin-top: 16px;
+  }
+  .hs-warning-banner .icon { font-size: 18px; flex-shrink: 0; margin-top: -1px; }
+
+  /* CHECKLIST ITEMS */
+  .checklist-body { padding: 0 32px 40px; }
+
+  .check-group {
+    margin-top: 24px;
+  }
+  .check-group-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(208,2,27,0.2);
+  }
+
+  .check-item {
+    display: grid;
+    grid-template-columns: 44px 1fr 130px 160px;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    background: var(--surface);
+    transition: border-color 0.15s, background 0.15s;
+    overflow: hidden;
+  }
+  .check-item:hover { border-color: var(--border2); background: var(--surface2); }
+  .check-item.checked { border-color: rgba(39,174,96,0.3); background: rgba(39,174,96,0.03); }
+  .check-item.damaged { border-color: rgba(208,2,27,0.4); background: rgba(208,2,27,0.04); }
+  .check-item.hs-high { border-left: 3px solid var(--red); }
+  .check-item.hs-medium { border-left: 3px solid var(--amber); }
+
+  .check-tick {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    border-right: 1px solid var(--border);
+    padding: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .check-tick:hover { background: rgba(39,174,96,0.1); }
+  .check-tick svg { width: 18px; height: 18px; }
+
+  .check-label {
+    padding: 11px 14px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .check-item.checked .check-label { color: var(--text-dim); text-decoration: line-through; text-decoration-color: #444; }
+
+  .check-status {
+    padding: 6px 10px;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .status-select {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    outline: none;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .status-select option { background: var(--surface2); color: var(--text); }
+
+  .check-notes {
+    padding: 6px 10px;
+  }
+  .notes-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-family: var(--font-body);
+    font-size: 12px;
+    outline: none;
+    resize: none;
+    height: 32px;
+    line-height: 1.4;
+  }
+  .notes-input::placeholder { color: var(--text-dimmer); font-style: italic; }
+
+  .risk-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-left: 10px;
+  }
+  .risk-high { background: rgba(208,2,27,0.2); color: #ff6666; }
+  .risk-medium { background: rgba(245,166,35,0.2); color: var(--amber); }
+
+  /* COLUMN HEADERS */
+  .check-col-headers {
+    display: grid;
+    grid-template-columns: 44px 1fr 130px 160px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    padding: 0;
+  }
+  .col-h {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--text-dimmer);
+    text-transform: uppercase;
+    padding: 0 14px;
+  }
+  .col-h:first-child { text-align: center; padding: 0; }
+
+  /* SUMMARY SECTION */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 24px 32px 0;
+  }
+  .outcome-card {
+    background: var(--surface);
+    border: 2px solid var(--border2);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .outcome-card:hover { border-color: var(--text-dim); }
+  .outcome-card.selected-green { border-color: var(--green); background: rgba(39,174,96,0.08); }
+  .outcome-card.selected-amber { border-color: var(--amber); background: rgba(245,166,35,0.08); }
+  .outcome-card.selected-red { border-color: var(--red); background: rgba(208,2,27,0.08); }
+  .outcome-icon { font-size: 28px; margin-bottom: 8px; }
+  .outcome-label { font-family: var(--font-display); font-size: 18px; letter-spacing: 1px; }
+  .outcome-label.green { color: var(--green); }
+  .outcome-label.amber { color: var(--amber); }
+  .outcome-label.red { color: var(--red); }
+  .outcome-desc { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  .priority-table { margin: 24px 32px 0; }
+  .priority-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .priority-table th {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--text-dimmer);
+    text-transform: uppercase;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border2);
+  }
+  .priority-table td {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .priority-table tr:last-child td { border-bottom: none; }
+  .priority-table td input, .priority-table td select {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+    padding: 3px 0;
+  }
+  .priority-table td select { color: var(--text-dim); font-family: var(--font-mono); font-size: 11px; }
+  .priority-table td select option { background: var(--surface2); }
+  .row-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dimmer);
+    text-align: center;
+    width: 30px;
+  }
+
+  .comments-box {
+    margin: 24px 32px 0;
+  }
+  .comments-box label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dimmer);
+    display: block;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .comments-box textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    outline: none;
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.5;
+  }
+  .comments-box textarea:focus { border-color: var(--red); }
+
+  /* SIGNOFF */
+  .signoff-grid {
+    margin: 24px 32px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .signoff-field label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--text-dimmer);
+    display: block;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+  }
+  .signoff-field input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+  }
+  .signoff-field input:focus { border-color: var(--red); }
+
+  .btn-primary {
+    margin: 32px 32px 40px;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    padding: 14px 32px;
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 2px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-primary:hover { background: #a80014; }
+  .btn-primary:active { transform: scale(0.98); }
+
+  /* OVERALL STATS BAR */
+  .stats-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+    display: flex;
+    gap: 28px;
+    align-items: center;
+  }
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .stat-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .stat-val { font-family: var(--font-mono); font-size: 14px; color: var(--text); font-weight: 500; }
+
+  /* NAV BUTTONS */
+  .nav-buttons {
+    padding: 20px 32px;
+    display: flex;
+    gap: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+  .btn-nav {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-nav:hover { background: var(--surface3); border-color: var(--text-dim); }
+  .btn-nav.next { background: var(--red); border-color: var(--dark-red); }
+  .btn-nav.next:hover { background: #a80014; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  @media (max-width: 800px) {
+    .app-layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .check-item { grid-template-columns: 44px 1fr; }
+    .check-status, .check-notes { display: none; }
+    .check-col-headers { display: none; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .signoff-grid { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    .topbar, .sidebar, .nav-buttons, .stats-bar { display: none; }
+    .section-panel { display: block !important; page-break-before: always; }
+    .section-panel:first-child { page-break-before: avoid; }
+    body { background: white; color: black; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">MOTORSPORT ASSESSMENT</div>
+  <div class="topbar-right">
+    <div class="progress-pill" id="progressPill">0 / 0 checked</div>
+    <button class="btn-print" onclick="generatePDF()" id="pdfBtn">⬇ DOWNLOAD PDF</button>
+    <button class="btn-print" onclick="window.print()">⎙ PRINT</button>
+  </div>
+</div>
+
+<div id="heroSection">
+  <div class="hero">
+    <div class="hero-eyebrow">LEVEL 3 MOTORSPORT — BRANDS HATCH INCIDENT</div>
+    <div class="hero-title">DAMAGE<br><span>ASSESSMENT</span></div>
+    <div class="hero-sub">Post-Rollover Inspection Checklist — Complete all sections systematically</div>
+    <div class="incident-grid">
+      <div class="field-group"><label>Date of Incident</label><input type="date" id="f-incident-date"></div>
+      <div class="field-group"><label>Assessment Date</label><input type="date" id="f-assess-date"></div>
+      <div class="field-group"><label>Vehicle / Car No.</label><input type="text" placeholder="e.g. Car #7" id="f-car"></div>
+      <div class="field-group"><label>Driver Name</label><input type="text" id="f-driver"></div>
+      <div class="field-group"><label>Learner Name</label><input type="text" id="f-learner"></div>
+      <div class="field-group"><label>Tutor / Assessor</label><input type="text" id="f-tutor"></div>
+    </div>
+  </div>
+</div>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Sections</div>
+    <div id="navList"></div>
+  </aside>
+  <main class="main" id="mainContent"></main>
+</div>
+
+<script>
+const SECTIONS = [
+  {
+    id: "hs",
+    title: "Health & Safety",
+    subtitle: "COMPLETE BEFORE INSPECTION",
+    accent: true,
+    desc: "ALL items below must be confirmed BEFORE any hands-on damage assessment begins. Glass shards are present.",
+    warning: "⚠ Glass hazard present. PPE is MANDATORY for all personnel. Do not skip any item.",
+    groups: [
+      {
+        label: "Immediate Scene Safety",
+        items: [
+          { label: "DO NOT approach or enter the vehicle until PPE is fully donned by ALL personnel", risk: "HIGH" },
+          { label: "Confirm the vehicle is stationary, stable, and supported — prop/chock as necessary", risk: "HIGH" },
+          { label: "Isolate the battery / kill switch — verify with a multimeter that no electrical circuits are live", risk: "HIGH" },
+          { label: "Confirm fuel system is OFF — no smell of fuel, smoke, or sign of fire risk before proceeding", risk: "HIGH" },
+        ]
+      },
+      {
+        label: "PPE Requirements",
+        items: [
+          { label: "Each learner must wear cut-resistant gloves rated EN388 or higher before touching any part of the car", risk: "HIGH" },
+          { label: "Each learner must wear safety glasses or face shield — glass fragments may be airborne or dislodged", risk: "HIGH" },
+          { label: "Each learner must wear steel-toecap safety boots — glass may be present on the floor around the vehicle", risk: "HIGH" },
+        ]
+      },
+      {
+        label: "Glass Hazard Management",
+        items: [
+          { label: "Visually sweep the floor area around the vehicle — identify and mark all visible glass debris before approaching", risk: "HIGH" },
+          { label: "Do NOT use bare hands to sweep or clear glass — use appropriate tools (brush/pan) only", risk: "HIGH" },
+          { label: "Collect all glass fragments in a sealed, rigid puncture-proof container; label as 'Sharp Waste — Hazardous'", risk: "HIGH" },
+          { label: "Do NOT blow compressed air in the cockpit — this will scatter glass fragments further", risk: "HIGH" },
+          { label: "Ensure adequate lighting in the work area — glass shards are difficult to see in poor light", risk: "MEDIUM" },
+        ]
+      },
+      {
+        label: "Area & Documentation Controls",
+        items: [
+          { label: "Ensure a first aid kit is accessible and a trained first aider is present in the workshop", risk: "MEDIUM" },
+          { label: "Cordon off the vehicle with barrier tape — only authorised learners and assessors to enter the zone", risk: "MEDIUM" },
+          { label: "Raise an incident/near-miss report with your tutor for the original rollover — document before proceeding", risk: "MEDIUM" },
+          { label: "Confirm all learners have been briefed on hazards and have signed the risk assessment sheet", risk: "MEDIUM" },
+        ]
+      }
+    ]
+  },
+  {
+    id: "exterior",
+    title: "Exterior & Bodywork",
+    subtitle: "SECTION 2",
+    desc: "Inspect all external body panels, aerodynamic components, and fixings.",
+    groups: [{
+      label: "Bodywork & Aero",
+      items: [
+        { label: "Front bumper / splitter — cracks, deformation, detachment" },
+        { label: "Rear diffuser / bumper — impact damage, cracks, missing fixings" },
+        { label: "Front wings / canards — bends, cracks, missing elements" },
+        { label: "Rear wing (main plane & flap) — deformation, mounting integrity, alignment" },
+        { label: "Wing end plates — cracks, missing sections, bent stays" },
+        { label: "Side pods / side bodywork panels — visible damage, holes, splits" },
+        { label: "Undertray / floor — cracks, bends, lost sections from rollover ground contact" },
+        { label: "All body panel fixings / dzus fasteners — secure, not missing or bent" },
+        { label: "Paintwork / livery — document all new scuffs, scratches, and abrasion" },
+        { label: "Roll hoop / roll bar (if visible externally) — deformation, cracks at base mounts" },
+        { label: "Wheel arch edges — cracking or deformation from rollover ground contact" },
+      ]
+    }]
+  },
+  {
+    id: "glazing",
+    title: "Glazing & Screens",
+    subtitle: "SECTION 3 — GLASS HAZARD ZONE",
+    warning: "⚠ Confirm PPE (cut gloves + eye protection) is still in place before inspecting this section.",
+    desc: "Inspect all screens and glazing. Document glass locations carefully.",
+    groups: [{
+      label: "Screens & Glazing",
+      items: [
+        { label: "Windscreen — confirm presence, extent of cracking, or missing sections" },
+        { label: "Side windows (if fitted) — broken or missing glass, location of fragments" },
+        { label: "Rear window (if fitted) — condition, missing sections" },
+        { label: "Screen/window rubber seals — lifted, cracked, or missing" },
+        { label: "Visor / aero screen (if open-wheel) — cracked, shattered, or detached" },
+        { label: "Interior cockpit — glass present on seat, harness, pedals, floor — document locations" },
+        { label: "Dashboard / instrument binnacle — glass on surface, behind display, in switchgear" },
+        { label: "Ventilation ducts / airways — glass contamination inside air paths" },
+        { label: "Confirm all interior glass collected and disposed of as 'Sharp Waste'" },
+      ]
+    }]
+  },
+  {
+    id: "chassis",
+    title: "Chassis & Roll Structure",
+    subtitle: "SECTION 4",
+    desc: "Inspect the main tub, roll structure, and all structural attachment points.",
+    groups: [{
+      label: "Chassis & Structure",
+      items: [
+        { label: "Main chassis tub — inspect all visible surfaces for cracks, kinks, or deformation" },
+        { label: "Roll hoop — check for bends, cracks at base, distortion in cross-section" },
+        { label: "Roll hoop mounting points to chassis — cracked welds, pulled fixings, deformed structure" },
+        { label: "Front bulkhead — deformation, cracked welds, pushed-back structure" },
+        { label: "Rear bulkhead / engine bay surround — cracking, bending, weld failures" },
+        { label: "Sill / underfloor structural members — bent, cracked, or crushed" },
+        { label: "Front crash structure / nose box — deformation, detachment, crushed zone activation" },
+        { label: "Rear crash structure — condition, deformation from rear impact" },
+        { label: "Side impact protection (if fitted) — crushed, bent, or detached from chassis" },
+        { label: "All sub-frame / mounting brackets — cracked welds, bent, missing bolts" },
+      ]
+    }]
+  },
+  {
+    id: "suspension",
+    title: "Suspension & Steering",
+    subtitle: "SECTION 5",
+    desc: "Check all suspension geometry, linkages, and steering components.",
+    groups: [
+      {
+        label: "Wishbones & Geometry",
+        items: [
+          { label: "Front upper wishbones (both sides) — bent, cracked, deformed, broken rose joints" },
+          { label: "Front lower wishbones (both sides) — bent, cracked, deformed, broken rose joints" },
+          { label: "Rear upper wishbones (both sides) — bent, cracked, deformed, broken rose joints" },
+          { label: "Rear lower wishbones (both sides) — bent, cracked, deformed, broken rose joints" },
+          { label: "Push/pull rods (if fitted) — bent, cracked, detached from bell crank or upright" },
+          { label: "Bell cranks / rockers — deformation, cracked mounting, bearing condition" },
+          { label: "Uprights / stub axles (all four corners) — cracked, bent, fractured" },
+          { label: "Wheel hubs — cracked, bent, missing studs, bearing damage" },
+        ]
+      },
+      {
+        label: "Steering & Damping",
+        items: [
+          { label: "Steering rack — bent rack, damaged rack mounts, free play" },
+          { label: "Steering column — bent, kinked, cracked, universal joint condition" },
+          { label: "Track rod ends — bent, broken, loose, damaged threads" },
+          { label: "Anti-roll bars and drop links — bent, detached, broken" },
+          { label: "Shock absorbers / dampers — leaking, bent, damaged mounts or eyes" },
+          { label: "Coil springs — cracked, broken coils, displaced from perch" },
+          { label: "Wheel alignment — visually assess for obvious toe/camber deviations" },
+        ]
+      }
+    ]
+  },
+  {
+    id: "brakes",
+    title: "Braking System",
+    subtitle: "SECTION 6",
+    desc: "Inspect all brake components. Do not test vehicle under power until signed off.",
+    groups: [{
+      label: "Brakes",
+      items: [
+        { label: "Brake discs (all four) — cracked, warped, heavily scored, or shattered" },
+        { label: "Brake callipers (all four) — cracked body, damaged pistons, leaking seals" },
+        { label: "Brake pads — condition, thickness, debris contamination" },
+        { label: "Brake lines / braided hoses — kinked, cut, leaking, abrasion damage" },
+        { label: "Brake master cylinder — condition, mounting, fluid reservoir level/contamination" },
+        { label: "Brake bias bar (if fitted) — bent, damaged, bias position noted" },
+        { label: "Brake pedal assembly — bent pedal, cracked bracket, free play" },
+        { label: "Confirm braking system is NOT used until fully inspected and signed off" },
+      ]
+    }]
+  },
+  {
+    id: "powertrain",
+    title: "Engine, Gearbox & Drivetrain",
+    subtitle: "SECTION 7",
+    desc: "Inspect all powertrain components, fluid systems, and mountings.",
+    groups: [
+      {
+        label: "Engine & Gearbox",
+        items: [
+          { label: "Engine — visual check for cracked castings, leaks, displaced ancillaries" },
+          { label: "Engine mounts — cracked, sheared bolts, deformation" },
+          { label: "Gearbox — cracked casing, leaks, selector linkage condition" },
+          { label: "Gearbox mounts — cracked, sheared, displaced" },
+          { label: "Driveshafts / CV joints (if applicable) — bent, cracked boots, displaced from diff" },
+          { label: "Differential — casing damage, leaks, mounting integrity" },
+        ]
+      },
+      {
+        label: "Fluids & Ancillaries",
+        items: [
+          { label: "Engine oil — check level, colour, contamination with coolant" },
+          { label: "Coolant — check level, check for leaks, check for oil contamination" },
+          { label: "Fuel system — fuel tank integrity, fuel lines, fittings, fuel pump mounting" },
+          { label: "Exhaust system — cracked headers, detached sections, broken mounts" },
+          { label: "Air intake / airbox — cracked, displaced, filter condition" },
+          { label: "Throttle cable/linkage — kinked, frayed, correct travel and return" },
+        ]
+      }
+    ]
+  },
+  {
+    id: "wheels",
+    title: "Wheels & Tyres",
+    subtitle: "SECTION 8",
+    desc: "Inspect all four wheels, tyre condition, and fixings.",
+    groups: [{
+      label: "Wheels & Tyres",
+      items: [
+        { label: "Wheel rims (all four) — cracked, buckled, kerbing damage" },
+        { label: "Tyre condition (all four) — cuts, punctures, sidewall damage, cording visible" },
+        { label: "Tyre pressures — check all four, note readings in Notes field" },
+        { label: "Wheel nuts / studs — all present, correct torque (calibrated torque wrench)" },
+        { label: "Valve stems — undamaged, no leaks" },
+      ]
+    }]
+  },
+  {
+    id: "safety",
+    title: "Safety Equipment",
+    subtitle: "SECTION 9",
+    desc: "Check all driver safety systems, restraints, and suppression equipment.",
+    groups: [{
+      label: "Driver Safety Systems",
+      items: [
+        { label: "Harness / seatbelt — webbing condition, buckle operation, all mounting anchors" },
+        { label: "HANS device mounts / tethers (if applicable) — condition" },
+        { label: "Fire suppression system — trigger undamaged, bottles fully charged, lines intact" },
+        { label: "Fire suppression system activation handle — accessible, undamaged" },
+        { label: "Master kill switch (internal) — operation, mounting integrity" },
+        { label: "External kill switch — operation, marking visible from outside" },
+        { label: "Seat — cracked, deformed, mounting brackets, all fixings present" },
+        { label: "Head restraint — condition, mounting, alignment" },
+        { label: "Helmet aperture / padding — damage from helmet contact during rollover" },
+        { label: "Safety net / door net (if fitted) — webbing, fixings, operation" },
+        { label: "Tow hook / recovery point — undamaged, accessible, secure" },
+        { label: "Fire extinguisher (if handheld) — fully charged, bracket secure" },
+      ]
+    }]
+  },
+  {
+    id: "electrical",
+    title: "Electrical & Electronics",
+    subtitle: "SECTION 10",
+    desc: "Inspect wiring, battery, sensors, and all electronic systems.",
+    groups: [{
+      label: "Electrical Systems",
+      items: [
+        { label: "Battery — secure mounting, no damage to casing, terminals tight" },
+        { label: "Wiring loom — chafed, cut, melted, loose connectors, displaced from clips" },
+        { label: "Dashboard / display unit — cracking, water ingress, functionality" },
+        { label: "Sensors (wheel speed, brake pressure, etc.) — condition, correct seating, wiring" },
+        { label: "Data logger / ECU — secure mounting, connector condition" },
+        { label: "Lights (if fitted) — all lens intact, mounts secure" },
+        { label: "Starter motor connections — intact, no damage" },
+      ]
+    }]
+  },
+  {
+    id: "fluids",
+    title: "Fluid Leak Assessment",
+    subtitle: "SECTION 11",
+    warning: "⚠ Treat all fluid spills as a slip hazard. Absorb and contain immediately. Dispose of per COSHH regulations.",
+    desc: "Check for leaks across all fluid systems and document findings.",
+    groups: [{
+      label: "Fluid Systems",
+      items: [
+        { label: "Engine oil — check for leaks under/around engine, correct level" },
+        { label: "Coolant — leaks, correct level in header tank" },
+        { label: "Gearbox / differential oil — check for leaks" },
+        { label: "Brake fluid — reservoir level, any leaks along lines" },
+        { label: "Fuel — check for smell, wet patches, damaged lines or tank" },
+        { label: "Power steering fluid (if applicable) — level, leaks" },
+        { label: "Floor/ground under vehicle — document all fluid stains and identify source" },
+      ]
+    }]
+  },
+  {
+    id: "summary",
+    title: "Summary & Sign-Off",
+    subtitle: "SECTION 12",
+    desc: "Record the assessment outcome, list priority repairs, and complete sign-off.",
+    isSummary: true
+  }
+];
+
+// STATE
+const state = {
+  checks: {},  // id -> { ticked, status, notes }
+  outcome: null,
+  priorities: Array.from({length: 8}, () => ({ component: '', priority: '', action: '' })),
+  comments: '',
+  signoff: { learnerName: '', learnerSig: '', dateCompleted: '', tutorName: '', tutorSig: '', dateSigned: '' }
+};
+
+let currentSection = 0;
+
+function getCheckId(secId, gIdx, iIdx) {
+  return `${secId}_g${gIdx}_i${iIdx}`;
+}
+
+function buildNav() {
+  const nav = document.getElementById('navList');
+  nav.innerHTML = '';
+  SECTIONS.forEach((sec, i) => {
+    const total = sec.groups ? sec.groups.reduce((a, g) => a + g.items.length, 0) : 0;
+    const done = sec.groups ? sec.groups.reduce((a, g, gi) =>
+      a + g.items.filter((_, ii) => state.checks[getCheckId(sec.id, gi, ii)]?.ticked).length, 0) : 0;
+    const div = document.createElement('div');
+    div.className = 'nav-item' + (i === currentSection ? ' active' : '') + (sec.accent ? ' hs-item' : '');
+    div.innerHTML = `
+      <span class="nav-num">${String(i + 1).padStart(2, '0')}</span>
+      <span>${sec.title}</span>
+      ${total > 0 ? `<span class="nav-badge ${done === total ? 'done' : done > 0 ? '' : ''}">${done}/${total}</span>` : ''}
+    `;
+    div.onclick = () => goToSection(i);
+    nav.appendChild(div);
+  });
+}
+
+function buildMain() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = '';
+  SECTIONS.forEach((sec, si) => {
+    const panel = document.createElement('div');
+    panel.className = 'section-panel' + (si === currentSection ? ' active' : '');
+    panel.id = `panel-${si}`;
+
+    if (sec.isSummary) {
+      panel.innerHTML = buildSummaryHTML();
+    } else {
+      let itemsHTML = '';
+      (sec.groups || []).forEach((group, gi) => {
+        itemsHTML += `<div class="check-group">
+          <div class="check-group-label">${group.label}</div>
+          <div class="check-col-headers">
+            <div class="col-h"></div>
+            <div class="col-h">ITEM / COMPONENT</div>
+            <div class="col-h">CONDITION</div>
+            <div class="col-h">NOTES</div>
+          </div>`;
+        group.items.forEach((item, ii) => {
+          const id = getCheckId(sec.id, gi, ii);
+          const s = state.checks[id] || {};
+          const isDamaged = s.status === 'damaged';
+          const isTicked = s.ticked;
+          const riskClass = item.risk === 'HIGH' ? 'hs-high' : item.risk === 'MEDIUM' ? 'hs-medium' : '';
+          itemsHTML += `
+            <div class="check-item ${isTicked ? 'checked' : ''} ${isDamaged ? 'damaged' : ''} ${riskClass}" id="ci-${id}">
+              <div class="check-tick" onclick="toggleCheck('${id}')">
+                ${isTicked
+                  ? `<svg viewBox="0 0 24 24" fill="none" stroke="#27AE60" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+                  : `<svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`
+                }
+              </div>
+              <div class="check-label">${item.label}${item.risk ? `<span class="risk-tag ${item.risk === 'HIGH' ? 'risk-high' : 'risk-medium'}">${item.risk}</span>` : ''}</div>
+              <div class="check-status">
+                <select class="status-select" onchange="updateStatus('${id}', this.value)">
+                  <option value="" ${!s.status ? 'selected' : ''}>— Select —</option>
+                  <option value="ok" ${s.status === 'ok' ? 'selected' : ''}>✓ OK</option>
+                  <option value="damaged" ${s.status === 'damaged' ? 'selected' : ''}>✗ Damaged</option>
+                  <option value="na" ${s.status === 'na' ? 'selected' : ''}>N/A</option>
+                  <option value="replace" ${s.status === 'replace' ? 'selected' : ''}>Replace</option>
+                  <option value="repair" ${s.status === 'repair' ? 'selected' : ''}>Repair</option>
+                </select>
+              </div>
+              <div class="check-notes">
+                <textarea class="notes-input" placeholder="Add notes…" onchange="updateNotes('${id}', this.value)">${s.notes || ''}</textarea>
+              </div>
+            </div>`;
+        });
+        itemsHTML += `</div>`;
+      });
+
+      panel.innerHTML = `
+        <div class="section-header">
+          <div class="section-eyebrow">${sec.subtitle}</div>
+          <div class="section-title">${sec.accent ? `<span class="accent">⚠ </span>` : ''}${sec.title}</div>
+          <div class="section-desc">${sec.desc}</div>
+        </div>
+        ${sec.warning ? `<div class="hs-warning-banner"><span class="icon">⚠</span><span>${sec.warning}</span></div>` : ''}
+        ${buildStatsBar(sec)}
+        <div class="checklist-body">${itemsHTML}</div>
+        ${buildNavButtons(si)}
+      `;
+    }
+    main.appendChild(panel);
+  });
+  bindSummaryEvents();
+}
+
+function buildStatsBar(sec) {
+  if (!sec.groups) return '';
+  const total = sec.groups.reduce((a, g) => a + g.items.length, 0);
+  const ticked = sec.groups.reduce((a, g, gi) =>
+    a + g.items.filter((_, ii) => state.checks[getCheckId(sec.id, gi, ii)]?.ticked).length, 0);
+  const damaged = sec.groups.reduce((a, g, gi) =>
+    a + g.items.filter((_, ii) => state.checks[getCheckId(sec.id, gi, ii)]?.status === 'damaged').length, 0);
+  return `<div class="stats-bar">
+    <div class="stat"><div class="stat-dot" style="background:#27AE60"></div><span class="stat-val">${ticked}</span> checked</div>
+    <div class="stat"><div class="stat-dot" style="background:#D0021B"></div><span class="stat-val">${damaged}</span> damaged</div>
+    <div class="stat"><div class="stat-dot" style="background:#444"></div><span class="stat-val">${total - ticked}</span> remaining</div>
+  </div>`;
+}
+
+function buildNavButtons(si) {
+  const prev = si > 0 ? `<button class="btn-nav" onclick="goToSection(${si - 1})">← PREV</button>` : '';
+  const next = si < SECTIONS.length - 1 ? `<button class="btn-nav next" onclick="goToSection(${si + 1})">NEXT SECTION →</button>` : '';
+  return `<div class="nav-buttons">${prev}${next}</div>`;
+}
+
+function buildSummaryHTML() {
+  const priorityRows = state.priorities.map((p, i) => `
+    <tr>
+      <td class="row-num">${i + 1}</td>
+      <td><input type="text" placeholder="Component / System…" value="${p.component}" onchange="updatePriority(${i},'component',this.value)"></td>
+      <td><select onchange="updatePriority(${i},'priority',this.value)">
+        <option value="">Select</option>
+        <option value="H" ${p.priority==='H'?'selected':''}>H — High</option>
+        <option value="M" ${p.priority==='M'?'selected':''}>M — Medium</option>
+        <option value="L" ${p.priority==='L'?'selected':''}>L — Low</option>
+      </select></td>
+      <td><select onchange="updatePriority(${i},'action',this.value)">
+        <option value="">Select</option>
+        <option value="Replace" ${p.action==='Replace'?'selected':''}>Replace</option>
+        <option value="Repair" ${p.action==='Repair'?'selected':''}>Repair</option>
+        <option value="Monitor" ${p.action==='Monitor'?'selected':''}>Monitor</option>
+      </select></td>
+    </tr>`).join('');
+
+  return `
+    <div class="section-header">
+      <div class="section-eyebrow">SECTION 12</div>
+      <div class="section-title">Summary & <span class="accent">Sign-Off</span></div>
+      <div class="section-desc">Record overall outcome, priority repairs required, and complete learner/tutor sign-off.</div>
+    </div>
+    <div class="stats-bar">${buildOverallStats()}</div>
+    <div class="checklist-body">
+      <div class="check-group">
+        <div class="check-group-label">Overall Assessment Outcome</div>
+        <div class="summary-grid">
+          <div class="outcome-card ${state.outcome === 'repairable' ? 'selected-green' : ''}" onclick="setOutcome('repairable')">
+            <div class="outcome-icon">🔧</div>
+            <div class="outcome-label green">REPAIRABLE</div>
+            <div class="outcome-desc">All damage can be rectified</div>
+          </div>
+          <div class="outcome-card ${state.outcome === 'partial' ? 'selected-amber' : ''}" onclick="setOutcome('partial')">
+            <div class="outcome-icon">⚠️</div>
+            <div class="outcome-label amber">PARTIALLY REPAIRABLE</div>
+            <div class="outcome-desc">Some components require further assessment</div>
+          </div>
+          <div class="outcome-card ${state.outcome === 'writeoff' ? 'selected-red' : ''}" onclick="setOutcome('writeoff')">
+            <div class="outcome-icon">🚫</div>
+            <div class="outcome-label red">WRITE-OFF / UNSAFE</div>
+            <div class="outcome-desc">Vehicle unsafe to repair or uneconomical</div>
+          </div>
+        </div>
+      </div>
+      <div class="check-group">
+        <div class="check-group-label">Priority Repairs Required</div>
+        <div class="priority-table">
+          <table>
+            <thead><tr><th>#</th><th>Component / System</th><th>Priority</th><th>Replace / Repair</th></tr></thead>
+            <tbody>${priorityRows}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="check-group">
+        <div class="check-group-label">Additional Comments & Observations</div>
+        <div class="comments-box">
+          <textarea placeholder="Record any additional findings, observations, or recommendations…" onchange="state.comments = this.value">${state.comments}</textarea>
+        </div>
+      </div>
+      <div class="check-group">
+        <div class="check-group-label">Sign-Off</div>
+        <div class="signoff-grid">
+          <div class="signoff-field"><label>Learner Name</label><input type="text" value="${state.signoff.learnerName}" onchange="state.signoff.learnerName=this.value"></div>
+          <div class="signoff-field"><label>Learner Signature</label><input type="text" placeholder="Type full name as signature" value="${state.signoff.learnerSig}" onchange="state.signoff.learnerSig=this.value"></div>
+          <div class="signoff-field"><label>Date Completed</label><input type="date" value="${state.signoff.dateCompleted}" onchange="state.signoff.dateCompleted=this.value"></div>
+          <div class="signoff-field"><label>Tutor / Assessor Name</label><input type="text" value="${state.signoff.tutorName}" onchange="state.signoff.tutorName=this.value"></div>
+          <div class="signoff-field"><label>Tutor / Assessor Signature</label><input type="text" placeholder="Type full name as signature" value="${state.signoff.tutorSig}" onchange="state.signoff.tutorSig=this.value"></div>
+          <div class="signoff-field"><label>Date Countersigned</label><input type="date" value="${state.signoff.dateSigned}" onchange="state.signoff.dateSigned=this.value"></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn-nav" onclick="goToSection(${SECTIONS.length - 2})">← PREV</button>
+    </div>`;
+}
+
+function buildOverallStats() {
+  let total = 0, ticked = 0, damaged = 0;
+  SECTIONS.forEach(sec => {
+    if (!sec.groups) return;
+    sec.groups.forEach((g, gi) => {
+      g.items.forEach((_, ii) => {
+        const s = state.checks[getCheckId(sec.id, gi, ii)];
+        total++;
+        if (s?.ticked) ticked++;
+        if (s?.status === 'damaged') damaged++;
+      });
+    });
+  });
+  const pct = total > 0 ? Math.round(ticked / total * 100) : 0;
+  return `
+    <div class="stat"><div class="stat-dot" style="background:#27AE60"></div><span class="stat-val">${ticked}/${total}</span> items checked</div>
+    <div class="stat"><div class="stat-dot" style="background:#D0021B"></div><span class="stat-val">${damaged}</span> items damaged</div>
+    <div class="stat"><div class="stat-dot" style="background:#F5A623"></div><span class="stat-val">${pct}%</span> complete</div>`;
+}
+
+function bindSummaryEvents() {}
+
+function toggleCheck(id) {
+  if (!state.checks[id]) state.checks[id] = {};
+  state.checks[id].ticked = !state.checks[id].ticked;
+  const el = document.getElementById(`ci-${id}`);
+  if (el) {
+    el.classList.toggle('checked', state.checks[id].ticked);
+    const svg = el.querySelector('.check-tick');
+    if (svg) {
+      svg.innerHTML = state.checks[id].ticked
+        ? `<svg viewBox="0 0 24 24" fill="none" stroke="#27AE60" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`;
+    }
+  }
+  updateProgressPill();
+  buildNav();
+}
+
+function updateStatus(id, val) {
+  if (!state.checks[id]) state.checks[id] = {};
+  state.checks[id].status = val;
+  const el = document.getElementById(`ci-${id}`);
+  if (el) el.classList.toggle('damaged', val === 'damaged');
+}
+
+function updateNotes(id, val) {
+  if (!state.checks[id]) state.checks[id] = {};
+  state.checks[id].notes = val;
+}
+
+function updatePriority(i, field, val) {
+  state.priorities[i][field] = val;
+}
+
+function setOutcome(val) {
+  state.outcome = val;
+  document.querySelectorAll('.outcome-card').forEach(c => {
+    c.classList.remove('selected-green', 'selected-amber', 'selected-red');
+  });
+  const map = { repairable: 'selected-green', partial: 'selected-amber', writeoff: 'selected-red' };
+  const cards = document.querySelectorAll('.outcome-card');
+  const idx = { repairable: 0, partial: 1, writeoff: 2 };
+  if (cards[idx[val]]) cards[idx[val]].classList.add(map[val]);
+}
+
+function goToSection(i) {
+  currentSection = i;
+  document.querySelectorAll('.section-panel').forEach((p, pi) => {
+    p.classList.toggle('active', pi === i);
+  });
+  document.querySelectorAll('.nav-item').forEach((n, ni) => {
+    n.classList.toggle('active', ni === i);
+  });
+  if (i === SECTIONS.length - 1) {
+    const panel = document.getElementById(`panel-${i}`);
+    if (panel) panel.innerHTML = buildSummaryHTML();
+  }
+  document.getElementById('mainContent').scrollTop = 0;
+  window.scrollTo(0, 0);
+  buildNav();
+}
+
+function updateProgressPill() {
+  let total = 0, ticked = 0;
+  SECTIONS.forEach(sec => {
+    if (!sec.groups) return;
+    sec.groups.forEach((g, gi) => {
+      g.items.forEach((_, ii) => {
+        total++;
+        if (state.checks[getCheckId(sec.id, gi, ii)]?.ticked) ticked++;
+      });
+    });
+  });
+  document.getElementById('progressPill').textContent = `${ticked} / ${total} checked`;
+}
+
+// INIT
+buildNav();
+buildMain();
+updateProgressPill();
+
+// ─── PDF GENERATION ───────────────────────────────────────────────────────────
+function generatePDF() {
+  const btn = document.getElementById('pdfBtn');
+  btn.textContent = '⏳ Generating…';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const PW = 210, PH = 297;
+      const ML = 14, MR = 14, MT = 14;
+      const CW = PW - ML - MR;
+      let y = MT;
+      let pageNum = 1;
+
+      // ── Colours ──
+      const RED = [208, 2, 27];
+      const DARK_RED = [139, 0, 0];
+      const DARK = [30, 30, 30];
+      const MID = [90, 90, 90];
+      const LIGHT = [220, 220, 220];
+      const WHITE = [255, 255, 255];
+      const GREEN = [39, 174, 96];
+      const AMBER = [245, 166, 35];
+      const BG_RED = [255, 242, 242];
+      const BG_AMBER = [255, 251, 240];
+      const BG_GREY = [248, 248, 248];
+
+      function addPageHeader() {
+        doc.setFillColor(...RED);
+        doc.rect(0, 0, PW, 10, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7);
+        doc.setTextColor(...WHITE);
+        doc.text('LEVEL 3 MOTORSPORT  |  RACING CAR DAMAGE ASSESSMENT  |  BRANDS HATCH', ML, 6.5);
+        doc.setTextColor(...WHITE);
+        doc.text(`Page ${pageNum}`, PW - MR, 6.5, { align: 'right' });
+        y = 16;
+      }
+
+      function checkPage(needed = 12) {
+        if (y + needed > PH - 12) {
+          addPageFooter();
+          doc.addPage();
+          pageNum++;
+          addPageHeader();
+        }
+      }
+
+      function addPageFooter() {
+        doc.setFillColor(...DARK);
+        doc.rect(0, PH - 8, PW, 8, 'F');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6.5);
+        doc.setTextColor(...LIGHT);
+        doc.text('CONFIDENTIAL — FOR EDUCATIONAL USE ONLY', ML, PH - 3);
+        doc.text('Level 3 Motorsport Assessment Portfolio', PW - MR, PH - 3, { align: 'right' });
+      }
+
+      function sectionBanner(title, subtitle, color = RED) {
+        checkPage(16);
+        doc.setFillColor(...color);
+        doc.rect(ML, y, CW, 10, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...WHITE);
+        doc.text(subtitle.toUpperCase(), ML + 3, y + 3.8);
+        doc.setFontSize(11);
+        doc.text(title.toUpperCase(), ML + 3, y + 8.2);
+        y += 13;
+      }
+
+      function fieldRow(label, value) {
+        checkPage(7);
+        doc.setFillColor(...BG_GREY);
+        doc.rect(ML, y, 45, 6, 'F');
+        doc.setDrawColor(...LIGHT);
+        doc.rect(ML, y, 45, 6, 'S');
+        doc.rect(ML + 45, y, CW - 45, 6, 'S');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...MID);
+        doc.text(label, ML + 2, y + 4);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...DARK);
+        doc.text(value || '—', ML + 47, y + 4);
+        y += 6;
+      }
+
+      function groupHeader(label) {
+        checkPage(8);
+        y += 2;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...RED);
+        doc.text(label.toUpperCase(), ML, y + 3);
+        doc.setDrawColor(...RED);
+        doc.setLineWidth(0.3);
+        doc.line(ML, y + 4.5, ML + CW, y + 4.5);
+        doc.setLineWidth(0.1);
+        y += 7;
+      }
+
+      function checkRow(label, ticked, status, notes, riskLevel) {
+        const statusLabel = { ok: 'OK', damaged: 'DAMAGED', na: 'N/A', replace: 'REPLACE', repair: 'REPAIR', '': '—' }[status] || '—';
+        const maxLabel = CW - 52;
+        const lines = doc.splitTextToSize(label, maxLabel - 2);
+        const rowH = Math.max(7, lines.length * 4.5 + 2);
+        checkPage(rowH + 1);
+
+        // Row background
+        let bgColor = WHITE;
+        if (riskLevel === 'HIGH') bgColor = BG_RED;
+        else if (riskLevel === 'MEDIUM') bgColor = BG_AMBER;
+        else if (ticked) bgColor = [245, 252, 248];
+        doc.setFillColor(...bgColor);
+        doc.rect(ML, y, CW, rowH, 'F');
+
+        // Left accent bar for risk
+        if (riskLevel === 'HIGH') { doc.setFillColor(...RED); doc.rect(ML, y, 1.5, rowH, 'F'); }
+        else if (riskLevel === 'MEDIUM') { doc.setFillColor(...AMBER); doc.rect(ML, y, 1.5, rowH, 'F'); }
+
+        // Checkbox
+        const cbX = ML + 3, cbY = y + rowH / 2 - 2;
+        doc.setDrawColor(...LIGHT);
+        doc.setFillColor(...WHITE);
+        doc.rect(cbX, cbY, 4, 4, 'FD');
+        if (ticked) {
+          doc.setDrawColor(...GREEN);
+          doc.setLineWidth(0.6);
+          doc.line(cbX + 0.6, cbY + 2, cbX + 1.6, cbY + 3.2);
+          doc.line(cbX + 1.6, cbY + 3.2, cbX + 3.4, cbY + 0.8);
+          doc.setLineWidth(0.1);
+        }
+
+        // Label text
+        doc.setFont('helvetica', ticked ? 'normal' : 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(ticked ? 150 : DARK[0], ticked ? 150 : DARK[1], ticked ? 150 : DARK[2]);
+        lines.forEach((line, li) => {
+          doc.text(line, ML + 9, y + 4.5 + li * 4.5);
+        });
+
+        // Status badge
+        const statX = ML + CW - 48;
+        let statColor = LIGHT;
+        if (status === 'ok') statColor = [200, 240, 215];
+        else if (status === 'damaged' || status === 'replace') statColor = [255, 210, 215];
+        else if (status === 'repair') statColor = [255, 235, 200];
+        doc.setFillColor(...statColor);
+        doc.rect(statX, y + rowH / 2 - 2.5, 20, 5, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(6.5);
+        doc.setTextColor(...MID);
+        doc.text(statusLabel, statX + 10, y + rowH / 2 + 0.8, { align: 'center' });
+
+        // Risk badge
+        if (riskLevel) {
+          const rc = riskLevel === 'HIGH' ? RED : AMBER;
+          doc.setFillColor(...rc);
+          doc.rect(statX + 22, y + rowH / 2 - 2.5, 14, 5, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(5.5);
+          doc.setTextColor(...WHITE);
+          doc.text(riskLevel, statX + 29, y + rowH / 2 + 0.8, { align: 'center' });
+        }
+
+        // Notes
+        if (notes) {
+          checkPage(5);
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(6.5);
+          doc.setTextColor(...MID);
+          const noteLines = doc.splitTextToSize('Notes: ' + notes, CW - 12);
+          noteLines.forEach((nl, li) => doc.text(nl, ML + 9, y + rowH + 3 + li * 3.5));
+          y += rowH + 3.5 * noteLines.length + 1;
+        } else {
+          y += rowH;
+        }
+
+        // Row border
+        doc.setDrawColor(...LIGHT);
+        doc.rect(ML, y - rowH, CW, rowH, 'S');
+      }
+
+      // ════════════════════════════════════════════════
+      // PAGE 1 — COVER
+      // ════════════════════════════════════════════════
+      doc.setFillColor(...DARK);
+      doc.rect(0, 0, PW, PH, 'F');
+
+      doc.setFillColor(...RED);
+      doc.rect(0, 0, 8, PH, 'F');
+
+      doc.setFillColor(25, 25, 25);
+      doc.rect(8, 0, PW - 8, PH, 'F');
+
+      // Red accent line
+      doc.setFillColor(...RED);
+      doc.rect(8, 80, PW - 8, 1.5, 'F');
+      doc.rect(8, 180, PW - 8, 1.5, 'F');
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(...RED);
+      doc.text('LEVEL 3 MOTORSPORT  —  BRANDS HATCH INCIDENT', 20, 60);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(42);
+      doc.setTextColor(...WHITE);
+      doc.text('DAMAGE', 20, 105);
+      doc.setTextColor(...RED);
+      doc.text('ASSESSMENT', 20, 125);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(160, 160, 160);
+      doc.text('Post-Rollover Inspection Checklist', 20, 143);
+      doc.text('Complete all 12 sections systematically', 20, 151);
+
+      // Incident details box
+      doc.setFillColor(35, 35, 35);
+      doc.rect(20, 190, PW - 40, 70, 'F');
+      doc.setDrawColor(...RED);
+      doc.setLineWidth(0.5);
+      doc.rect(20, 190, PW - 40, 70, 'S');
+      doc.setLineWidth(0.1);
+
+      const incidentDate = document.getElementById('f-incident-date').value;
+      const assessDate = document.getElementById('f-assess-date').value;
+      const carNo = document.getElementById('f-car').value;
+      const driverName = document.getElementById('f-driver').value;
+      const learnerName = document.getElementById('f-learner').value;
+      const tutorName = document.getElementById('f-tutor').value;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...RED);
+      doc.text('ASSESSMENT DETAILS', 26, 200);
+
+      const coverFields = [
+        ['Date of Incident', incidentDate || 'Not recorded'],
+        ['Assessment Date', assessDate || 'Not recorded'],
+        ['Vehicle / Car No.', carNo || 'Not recorded'],
+        ['Driver Name', driverName || 'Not recorded'],
+        ['Learner Name', learnerName || 'Not recorded'],
+        ['Tutor / Assessor', tutorName || 'Not recorded'],
+      ];
+      coverFields.forEach(([lbl, val], i) => {
+        const fy = 207 + i * 8;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(130, 130, 130);
+        doc.text(lbl + ':', 26, fy);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...WHITE);
+        doc.text(val, 75, fy);
+      });
+
+      // Overall stats on cover
+      let totalItems = 0, tickedItems = 0, damagedItems = 0;
+      SECTIONS.forEach(sec => {
+        if (!sec.groups) return;
+        sec.groups.forEach((g, gi) => {
+          g.items.forEach((_, ii) => {
+            const s = state.checks[getCheckId(sec.id, gi, ii)];
+            totalItems++;
+            if (s?.ticked) tickedItems++;
+            if (s?.status === 'damaged') damagedItems++;
+          });
+        });
+      });
+
+      doc.setFillColor(...RED);
+      doc.rect(20, 268, PW - 40, 10, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(...WHITE);
+      doc.text(`${tickedItems} / ${totalItems} items checked   |   ${damagedItems} items flagged as damaged`, PW / 2, 274, { align: 'center' });
+
+      addPageFooter();
+
+      // ════════════════════════════════════════════════
+      // CHECKLIST SECTIONS
+      // ════════════════════════════════════════════════
+      SECTIONS.forEach((sec, si) => {
+        if (sec.isSummary) return;
+        doc.addPage();
+        pageNum++;
+        addPageHeader();
+
+        const sectionColor = sec.accent ? RED : DARK_RED;
+        sectionBanner(sec.title, sec.subtitle, sectionColor);
+
+        if (sec.warning) {
+          checkPage(10);
+          doc.setFillColor(...BG_RED);
+          doc.rect(ML, y, CW, 8, 'F');
+          doc.setDrawColor(...RED);
+          doc.rect(ML, y, CW, 8, 'S');
+          doc.setFillColor(...RED);
+          doc.rect(ML, y, 1.5, 8, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7.5);
+          doc.setTextColor(...RED);
+          const warnLines = doc.splitTextToSize(sec.warning, CW - 6);
+          warnLines.forEach((wl, wi) => doc.text(wl, ML + 4, y + 3 + wi * 4));
+          y += 10;
+        }
+
+        (sec.groups || []).forEach((group, gi) => {
+          groupHeader(group.label);
+          group.items.forEach((item, ii) => {
+            const id = getCheckId(sec.id, gi, ii);
+            const s = state.checks[id] || {};
+            checkRow(item.label, !!s.ticked, s.status || '', s.notes || '', item.risk || '');
+          });
+        });
+
+        addPageFooter();
+      });
+
+      // ════════════════════════════════════════════════
+      // SUMMARY PAGE
+      // ════════════════════════════════════════════════
+      doc.addPage();
+      pageNum++;
+      addPageHeader();
+      sectionBanner('Summary & Sign-Off', 'Section 12', DARK_RED);
+
+      // Overall outcome
+      groupHeader('Overall Assessment Outcome');
+      checkPage(16);
+      const outcomes = [
+        { key: 'repairable', label: 'REPAIRABLE', color: GREEN },
+        { key: 'partial', label: 'PARTIALLY REPAIRABLE', color: AMBER },
+        { key: 'writeoff', label: 'WRITE-OFF / UNSAFE', color: RED },
+      ];
+      const boxW = (CW - 6) / 3;
+      outcomes.forEach((o, oi) => {
+        const bx = ML + oi * (boxW + 3);
+        const selected = state.outcome === o.key;
+        doc.setFillColor(...(selected ? o.color : [240, 240, 240]));
+        doc.rect(bx, y, boxW, 12, 'F');
+        doc.setDrawColor(...o.color);
+        doc.setLineWidth(selected ? 0.8 : 0.2);
+        doc.rect(bx, y, boxW, 12, 'S');
+        doc.setLineWidth(0.1);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7);
+        doc.setTextColor(...(selected ? WHITE : o.color));
+        doc.text(o.label, bx + boxW / 2, y + 5.5, { align: 'center' });
+        if (selected) {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(6);
+          doc.text('SELECTED', bx + boxW / 2, y + 9.5, { align: 'center' });
+        }
+      });
+      y += 15;
+
+      // Priority repairs table
+      groupHeader('Priority Repairs Required');
+      checkPage(10);
+      const prioData = state.priorities
+        .filter(p => p.component)
+        .map((p, i) => [i + 1, p.component, p.priority || '—', p.action || '—']);
+
+      if (prioData.length === 0) prioData.push(['—', 'No priority repairs recorded', '—', '—']);
+
+      doc.autoTable({
+        startY: y,
+        head: [['#', 'Component / System', 'Priority', 'Action']],
+        body: prioData,
+        margin: { left: ML, right: MR },
+        tableWidth: CW,
+        styles: { fontSize: 8, cellPadding: 2.5, textColor: DARK, lineColor: LIGHT, lineWidth: 0.1 },
+        headStyles: { fillColor: DARK_RED, textColor: WHITE, fontStyle: 'bold', fontSize: 7.5 },
+        columnStyles: { 0: { cellWidth: 10 }, 2: { cellWidth: 22 }, 3: { cellWidth: 28 } },
+        alternateRowStyles: { fillColor: BG_GREY },
+      });
+      y = doc.lastAutoTable.finalY + 6;
+
+      // Comments
+      groupHeader('Additional Comments & Observations');
+      checkPage(18);
+      doc.setFillColor(...BG_GREY);
+      doc.rect(ML, y, CW, 18, 'F');
+      doc.setDrawColor(...LIGHT);
+      doc.rect(ML, y, CW, 18, 'S');
+      if (state.comments) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...DARK);
+        const commentLines = doc.splitTextToSize(state.comments, CW - 6);
+        commentLines.slice(0, 4).forEach((cl, ci) => doc.text(cl, ML + 3, y + 5 + ci * 4));
+      }
+      y += 20;
+
+      // Sign-off
+      groupHeader('Sign-Off');
+      const soFields = [
+        ['Learner Name', state.signoff.learnerName],
+        ['Learner Signature', state.signoff.learnerSig],
+        ['Date Completed', state.signoff.dateCompleted],
+        ['Tutor / Assessor Name', state.signoff.tutorName],
+        ['Tutor / Assessor Signature', state.signoff.tutorSig],
+        ['Date Countersigned', state.signoff.dateSigned],
+      ];
+      soFields.forEach(([lbl, val]) => fieldRow(lbl, val));
+
+      y += 6;
+      checkPage(12);
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(7);
+      doc.setTextColor(...MID);
+      doc.text('This document forms part of the Level 3 Motorsport qualification portfolio. Retain for assessment evidence.', PW / 2, y, { align: 'center' });
+
+      addPageFooter();
+
+      // ── Save ──
+      const car = carNo ? carNo.replace(/[^a-z0-9]/gi, '_') : 'Car';
+      const date = assessDate || new Date().toISOString().slice(0, 10);
+      doc.save(`Damage_Assessment_${car}_${date}.pdf`);
+
+    } catch (err) {
+      alert('PDF generation failed: ' + err.message);
+      console.error(err);
+    }
+
+    btn.textContent = '⬇ DOWNLOAD PDF';
+    btn.disabled = false;
+  }, 50);
+}
+</script>
+</body>
+</html>

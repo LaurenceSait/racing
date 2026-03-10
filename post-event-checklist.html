@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post-Event Checklist — Level 3 Motorsport</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root {
+  --ink: #0E0F11;
+  --ink2: #1C1E22;
+  --ink3: #252830;
+  --ink4: #2E3038;
+  --rule: #383B44;
+  --rule2: #434650;
+  --muted: #6B7280;
+  --dim: #9CA3AF;
+  --text: #E8EAF0;
+  --text2: #C4C9D4;
+  --gold: #A3E635;
+  --gold2: #84CC16;
+  --gold-pale: rgba(163,230,53,0.08);
+  --green: #34D399;
+  --red: #F87171;
+  --blue: #60A5FA;
+  --font-head: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  height: 52px;
+  background: var(--ink2);
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.topbar-left { display:flex; align-items:center; gap:14px; }
+.flag-icon {
+  width: 28px; height: 28px;
+  background: repeating-conic-gradient(var(--text) 0% 25%, var(--ink2) 0% 50%) 0 0 / 8px 8px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.topbar-brand { font-family: var(--font-head); font-size: 18px; font-weight: 700; letter-spacing: 2px; color: var(--text); }
+.topbar-brand span { color: var(--gold); }
+.topbar-right { display:flex; align-items:center; gap:10px; }
+.pill {
+  background: var(--ink3);
+  border: 1px solid var(--rule2);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.pill .val { color: var(--gold); font-weight: 500; }
+.tbtn {
+  background: var(--ink3);
+  border: 1px solid var(--rule2);
+  color: var(--text2);
+  padding: 7px 14px;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+  display: flex; align-items:center; gap:6px;
+}
+.tbtn:hover { background: var(--ink4); border-color: var(--dim); color: var(--text); }
+.tbtn.primary { background: var(--gold2); border-color: var(--gold); color: var(--ink); font-weight: 600; }
+.tbtn.primary:hover { background: var(--gold); }
+.tbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(160deg, #131520 0%, #0E0F11 60%, #12100A 100%);
+  border-bottom: 1px solid var(--rule);
+  padding: 36px 24px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  right: -80px; top: -80px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(240,180,41,0.06) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero-row { display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom: 24px; }
+.hero-left {}
+.hero-kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.hero-title {
+  font-family: var(--font-head);
+  font-size: clamp(38px, 5vw, 58px);
+  font-weight: 800;
+  letter-spacing: 1px;
+  line-height: 0.95;
+  color: var(--text);
+}
+.hero-title em { color: var(--gold); font-style: normal; }
+.hero-sub { margin-top: 8px; font-size: 13px; color: var(--muted); font-weight: 300; }
+
+/* Event details card */
+.event-card {
+  background: var(--ink2);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 860px;
+}
+.event-card-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display:flex; align-items:center; gap:8px;
+}
+.event-card-title::after { content:''; flex:1; height:1px; background: var(--rule); }
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+.ef { display:flex; flex-direction:column; gap:4px; }
+.ef label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.ef input, .ef select, .ef textarea {
+  background: var(--ink3);
+  border: 1px solid var(--rule2);
+  border-radius: 4px;
+  padding: 7px 10px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.ef input:focus, .ef select:focus, .ef textarea:focus { border-color: var(--gold); }
+.ef select option { background: var(--ink3); }
+.ef textarea { resize: vertical; min-height: 36px; }
+.ef.wide { grid-column: span 2; }
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 248px 1fr;
+  min-height: calc(100vh - 52px);
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--ink2);
+  border-right: 1px solid var(--rule);
+  padding: 16px 0;
+  position: sticky;
+  top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+.sb-section {
+  padding: 0 14px 6px;
+  margin-bottom: 4px;
+}
+.sb-section-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--rule2);
+  text-transform: uppercase;
+  padding: 8px 6px 6px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 4px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s;
+  border: 1px solid transparent;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: var(--ink3); }
+.nav-item.active { background: var(--gold-pale); border-color: rgba(240,180,41,0.2); }
+.nav-num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--rule2);
+  width: 18px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.nav-item.active .nav-num { color: var(--gold); }
+.nav-label { font-size: 12px; color: var(--muted); flex: 1; }
+.nav-item.active .nav-label { color: var(--text); font-weight: 600; }
+.nav-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--ink4);
+  color: var(--muted);
+}
+.nav-badge.complete { background: rgba(52,211,153,0.15); color: var(--green); }
+.nav-badge.partial { background: rgba(240,180,41,0.15); color: var(--gold); }
+.nav-badge.issues { background: rgba(248,113,113,0.15); color: var(--red); }
+
+/* ── MAIN ── */
+.main { overflow-y: auto; }
+.panel { display:none; animation: fadeUp 0.2s ease; }
+.panel.active { display:block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+.panel-header {
+  padding: 24px 28px 16px;
+  border-bottom: 1px solid var(--rule);
+  position: sticky;
+  top: 0;
+  background: var(--ink);
+  z-index: 10;
+}
+.ph-kicker { font-family:var(--font-mono); font-size:9px; letter-spacing:2.5px; color:var(--gold); text-transform:uppercase; margin-bottom:4px; }
+.ph-title { font-family:var(--font-head); font-size:30px; font-weight:700; letter-spacing:1px; color:var(--text); }
+.ph-title em { color:var(--gold); font-style:normal; }
+.ph-desc { font-size:12px; color:var(--muted); margin-top:4px; max-width:560px; }
+
+.warn-banner {
+  margin: 14px 28px 0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  display:flex; gap:10px; align-items:flex-start;
+  font-size: 12px;
+  font-weight: 500;
+}
+.warn-banner.amber { background: rgba(240,180,41,0.08); border:1px solid rgba(240,180,41,0.25); color: #fcd34d; }
+.warn-banner.red { background: rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.25); color: #fca5a5; }
+.warn-banner.blue { background: rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.25); color: #93c5fd; }
+
+/* STATS BAR */
+.stats-bar {
+  display:flex; gap:20px; align-items:center;
+  padding: 10px 28px;
+  background: var(--ink2);
+  border-bottom: 1px solid var(--rule);
+}
+.stat { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--muted); }
+.stat-dot { width:7px; height:7px; border-radius:50%; }
+.sv { font-family:var(--font-mono); font-size:13px; color:var(--text); }
+
+/* BODY */
+.panel-body { padding: 0 28px 40px; }
+
+/* GROUP */
+.grp { margin-top: 22px; }
+.grp-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(240,180,41,0.15);
+  display:flex; align-items:center; gap:8px;
+}
+.col-heads {
+  display: grid;
+  grid-template-columns: 40px 1fr 110px 48px 160px;
+  padding: 3px 0;
+  margin-bottom: 3px;
+}
+.col-head {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 1.2px;
+  color: var(--rule2);
+  text-transform: uppercase;
+  padding: 0 8px;
+}
+.col-head:first-child { text-align:center; padding:0; }
+
+/* CHECK ITEM */
+.ci {
+  display: grid;
+  grid-template-columns: 40px 1fr 110px 48px 160px;
+  align-items: center;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  margin-bottom: 5px;
+  background: var(--ink2);
+  transition: border-color 0.12s, background 0.12s;
+  overflow: hidden;
+  min-height: 40px;
+}
+.ci:hover { border-color: var(--rule2); }
+.ci.ticked { border-color: rgba(52,211,153,0.2); background: rgba(52,211,153,0.02); }
+.ci.flagged { border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.03); }
+.ci.na-item { opacity: 0.55; }
+
+.ci-check {
+  display:flex; align-items:center; justify-content:center;
+  height:100%; min-height:40px;
+  border-right: 1px solid var(--rule);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.ci-check:hover { background: rgba(52,211,153,0.08); }
+.ci-check svg { width:16px; height:16px; }
+
+.ci-label {
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: var(--text2);
+  line-height: 1.4;
+}
+.ci.ticked .ci-label { color:var(--muted); text-decoration:line-through; text-decoration-color: var(--rule2); }
+
+.ci-status {
+  padding: 4px 8px;
+  border-left: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+}
+.ci-status select {
+  width:100%;
+  background:transparent;
+  border:none;
+  color:var(--muted);
+  font-family:var(--font-mono);
+  font-size:10px;
+  outline:none;
+  cursor:pointer;
+  padding: 3px 0;
+}
+.ci-status select option { background: var(--ink2); color: var(--text); }
+
+.ci-priority {
+  padding: 4px 6px;
+  border-right: 1px solid var(--rule);
+  display:flex; align-items:center; justify-content:center;
+}
+.ci-priority select {
+  width:100%;
+  background:transparent;
+  border:none;
+  color:var(--muted);
+  font-family:var(--font-mono);
+  font-size:10px;
+  outline:none;
+  cursor:pointer;
+  text-align:center;
+}
+.ci-priority select option { background:var(--ink2); color:var(--text); }
+
+.ci-notes { padding: 4px 8px; }
+.ci-notes input {
+  width:100%;
+  background:transparent;
+  border:none;
+  color:var(--muted);
+  font-size:11.5px;
+  font-family:var(--font-body);
+  outline:none;
+}
+.ci-notes input::placeholder { color:var(--rule2); font-style:italic; }
+
+/* NAV BUTTONS */
+.nav-btns {
+  padding: 20px 28px;
+  display:flex; gap:10px;
+  border-top: 1px solid var(--rule);
+  margin-top: 10px;
+}
+.nbtn {
+  padding: 9px 18px;
+  border-radius: 5px;
+  font-family:var(--font-mono);
+  font-size:11px;
+  cursor:pointer;
+  letter-spacing:1px;
+  transition:all 0.12s;
+  display:flex; align-items:center; gap:6px;
+  background: var(--ink3);
+  border: 1px solid var(--rule2);
+  color: var(--text2);
+}
+.nbtn:hover { background:var(--ink4); border-color:var(--dim); }
+.nbtn.fwd { background:var(--gold2); border-color:var(--gold); color:var(--ink); font-weight:600; }
+.nbtn.fwd:hover { background:var(--gold); }
+
+/* SUMMARY */
+.outcome-row {
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:10px;
+  margin-top:4px;
+}
+.oc {
+  border: 2px solid var(--rule);
+  border-radius: 8px;
+  padding: 16px;
+  text-align:center;
+  cursor:pointer;
+  transition: all 0.15s;
+  background: var(--ink2);
+}
+.oc:hover { border-color: var(--dim); }
+.oc.sel-green { border-color: var(--green); background:rgba(52,211,153,0.06); }
+.oc.sel-amber { border-color: var(--gold); background:rgba(240,180,41,0.06); }
+.oc.sel-red { border-color: var(--red); background:rgba(248,113,113,0.06); }
+.oc-icon { font-size:24px; margin-bottom:6px; }
+.oc-label { font-family:var(--font-head); font-size:16px; font-weight:700; letter-spacing:1px; }
+.oc-label.g { color:var(--green); }
+.oc-label.a { color:var(--gold); }
+.oc-label.r { color:var(--red); }
+.oc-desc { font-size:11px; color:var(--muted); margin-top:3px; }
+
+.action-table { margin-top:6px; }
+.action-table table { width:100%; border-collapse:collapse; font-size:12px; }
+.action-table th { font-family:var(--font-mono); font-size:9px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; padding:7px 10px; text-align:left; border-bottom:1px solid var(--rule2); }
+.action-table td { padding:5px 10px; border-bottom:1px solid var(--rule); }
+.action-table td input, .action-table td select {
+  background:transparent; border:none; color:var(--text); font-family:var(--font-body); font-size:12px; outline:none; width:100%; padding:2px 0;
+}
+.action-table td select { color:var(--muted); font-family:var(--font-mono); font-size:10px; }
+.action-table td select option { background:var(--ink2); }
+.rn { font-family:var(--font-mono); font-size:10px; color:var(--rule2); text-align:center; width:28px; }
+
+.so-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+.so-f label { font-family:var(--font-mono); font-size:9px; letter-spacing:1.5px; color:var(--muted); display:block; margin-bottom:4px; text-transform:uppercase; }
+.so-f input { width:100%; background:var(--ink3); border:1px solid var(--rule2); border-radius:4px; padding:8px 10px; color:var(--text); font-family:var(--font-mono); font-size:12px; outline:none; }
+.so-f input:focus { border-color:var(--gold); }
+
+.textarea-field { margin-top:6px; }
+.textarea-field label { font-family:var(--font-mono); font-size:9px; letter-spacing:1.5px; color:var(--muted); display:block; margin-bottom:6px; text-transform:uppercase; }
+.textarea-field textarea { width:100%; background:var(--ink3); border:1px solid var(--rule2); border-radius:6px; padding:10px 12px; color:var(--text); font-family:var(--font-body); font-size:13px; outline:none; resize:vertical; min-height:80px; line-height:1.5; }
+.textarea-field textarea:focus { border-color:var(--gold); }
+
+/* scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:var(--ink); }
+::-webkit-scrollbar-thumb { background:var(--rule2); border-radius:2px; }
+
+@media (max-width:780px) {
+  .layout { grid-template-columns:1fr; }
+  .sidebar { display:none; }
+  .ci { grid-template-columns:40px 1fr; }
+  .ci-status, .ci-priority, .ci-notes, .col-heads { display:none; }
+  .outcome-row { grid-template-columns:1fr; }
+  .so-grid { grid-template-columns:1fr; }
+}
+@media print {
+  .topbar, .sidebar, .nav-btns, .stats-bar, .hero { display:none; }
+  .panel { display:block !important; page-break-before:always; }
+  body { background:white; color:black; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="flag-icon"></div>
+    <div class="topbar-brand">MOTORSPORT <span>POST-EVENT</span></div>
+  </div>
+  <div class="topbar-right">
+    <div class="pill" id="progressPill"><span class="val" id="pillVal">0</span> / <span id="pillTotal">0</span> checked</div>
+    <button class="tbtn primary" onclick="generatePDF()" id="pdfBtn">⬇ Download PDF</button>
+    <button class="tbtn" onclick="window.print()">⎙ Print</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-row">
+    <div class="hero-left">
+      <div class="hero-kicker">Level 3 Motorsport — Post-Event Documentation</div>
+      <div class="hero-title">POST-EVENT<br><em>CHECKLIST</em></div>
+      <div class="hero-sub">Complete after every motorsport event for compliance, maintenance &amp; safety records</div>
+    </div>
+  </div>
+  <div class="event-card">
+    <div class="event-card-title">Event Details</div>
+    <div class="event-grid">
+      <div class="ef"><label>Event / Race Name</label><input type="text" id="f-event" placeholder="e.g. BRSCC Round 3"></div>
+      <div class="ef"><label>Circuit / Venue</label><input type="text" id="f-venue" placeholder="e.g. Brands Hatch"></div>
+      <div class="ef"><label>Event Date</label><input type="date" id="f-date"></div>
+      <div class="ef"><label>Championship / Series</label><input type="text" id="f-series" placeholder="e.g. Formula Ford"></div>
+      <div class="ef"><label>Car Number(s)</label><input type="text" id="f-cars" placeholder="e.g. #7, #12"></div>
+      <div class="ef"><label>Session Type</label>
+        <select id="f-session">
+          <option value="">Select…</option>
+          <option>Practice</option>
+          <option>Qualifying</option>
+          <option>Race</option>
+          <option>Full Race Weekend</option>
+          <option>Sprint Race</option>
+          <option>Track Day</option>
+          <option>Test Day</option>
+        </select>
+      </div>
+      <div class="ef"><label>Weather Conditions</label>
+        <select id="f-weather">
+          <option value="">Select…</option>
+          <option>Dry / Sunny</option>
+          <option>Dry / Overcast</option>
+          <option>Damp Track</option>
+          <option>Wet / Light Rain</option>
+          <option>Wet / Heavy Rain</option>
+          <option>Mixed Conditions</option>
+          <option>Fog / Low Visibility</option>
+        </select>
+      </div>
+      <div class="ef"><label>Lead Technician</label><input type="text" id="f-tech"></div>
+      <div class="ef"><label>Learner(s) on Site</label><input type="text" id="f-learners" placeholder="Names or count"></div>
+      <div class="ef"><label>Tutor / Supervisor</label><input type="text" id="f-tutor"></div>
+      <div class="ef wide"><label>Any Incidents / Notes (brief)</label><textarea id="f-incidents" placeholder="e.g. Car #7 had off at Druids — no damage. Car #12 gearbox issue in Q."></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-section">
+      <div class="sb-section-label">Checklist Sections</div>
+      <div id="navList"></div>
+    </div>
+  </aside>
+  <main class="main" id="mainContent"></main>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  SECTION DATA
+// ══════════════════════════════════════════════════════
+const SECTIONS = [
+  // ── 1. H&S ──────────────────────────────────────────
+  {
+    id:'hs', title:'Health & Safety', kicker:'Section 01',
+    desc:'Mandatory post-event H&S checks. Complete before any vehicle work begins.',
+    warn:{ type:'red', msg:'⚠  Complete ALL items in this section before beginning any mechanical or vehicle inspection work.' },
+    groups:[
+      { label:'Scene & Personnel',
+        items:[
+          { t:'Confirm all personnel are accounted for and no injuries have occurred' },
+          { t:'Any injuries or near-misses reported to first aider and recorded in incident log' },
+          { t:'First aid kit checked and restocked if used during the event' },
+          { t:'All personnel have removed themselves from live/active track areas' },
+          { t:'Paddock area secured — no unauthorised access to vehicles' },
+        ]
+      },
+      { label:'Vehicle Safety Before Work',
+        items:[
+          { t:'Battery isolator / kill switch OFF on all vehicles before any inspection' },
+          { t:'Vehicles are cool — allow minimum 20 mins before touching brake components or exhaust' },
+          { t:'Fuel system confirmed OFF — no fuel leaks or smell in paddock area' },
+          { t:'Vehicles chocked / supported where required — no unsupported jacking' },
+          { t:'Appropriate PPE available: gloves, eye protection, safety boots' },
+        ]
+      },
+      { label:'COSHH & Environment',
+        items:[
+          { t:'All spilled fluids (oil, coolant, fuel) contained and absorbed — dispose of per COSHH regulations' },
+          { t:'Used tyres segregated and ready for correct disposal' },
+          { t:'Waste materials (rags, packaging, used components) in correct bins' },
+          { t:'Drip trays emptied and cleaned' },
+          { t:'Fire extinguishers present and charged — note if any have been used or discharged' },
+        ]
+      }
+    ]
+  },
+  // ── 2. VEHICLE CONDITION ────────────────────────────
+  {
+    id:'vehicle', title:'Vehicle Condition', kicker:'Section 02',
+    desc:'General post-event inspection of all vehicles. Note any damage, wear, or anomalies.',
+    groups:[
+      { label:'Exterior & Bodywork',
+        items:[
+          { t:'Front bodywork / nose — cracks, chips, impact marks from racing' },
+          { t:'Rear bodywork — damage, missing sections, aerodynamic integrity' },
+          { t:'Side pods / flanks — contact damage, missing fixings or panels' },
+          { t:'Undertray / floor — examine for scrapes, cracks from kerb contact' },
+          { t:'Front and rear wings — condition, alignment, end plates, mounting' },
+          { t:'All body panel fixings — secure, no missing dzus fasteners or screws' },
+          { t:'Paintwork / livery — document any new damage for insurance records' },
+        ]
+      },
+      { label:'Structural',
+        items:[
+          { t:'Chassis / tub — visual inspection for any new cracks or deformation' },
+          { t:'Roll hoop — condition, no signs of impact or distortion' },
+          { t:'Front and rear crash structures — condition after any contact' },
+          { t:'Subframe / mounting points — no cracked welds or displaced mounts' },
+        ]
+      }
+    ]
+  },
+  // ── 3. TYRES & WHEELS ───────────────────────────────
+  {
+    id:'tyres', title:'Tyres & Wheels', kicker:'Section 03',
+    desc:'Post-event tyre condition assessment, pressures, and wheel inspection.',
+    warn:{ type:'amber', msg:'Record post-event tyre pressures while tyres are still warm for accurate trend data.' },
+    groups:[
+      { label:'Tyre Condition',
+        items:[
+          { t:'Front left tyre — wear level, inner/outer edge, any blistering or cuts' },
+          { t:'Front right tyre — wear level, inner/outer edge, any blistering or cuts' },
+          { t:'Rear left tyre — wear level, blistering, marbles, cuts or punctures' },
+          { t:'Rear right tyre — wear level, blistering, marbles, cuts or punctures' },
+          { t:'Tyre wear photographed and documented for development records' },
+          { t:'Used tyres marked with session, date and conditions for data comparison' },
+        ]
+      },
+      { label:'Tyre Pressures (Warm)',
+        items:[
+          { t:'Front left pressure recorded (note in comments)' },
+          { t:'Front right pressure recorded (note in comments)' },
+          { t:'Rear left pressure recorded (note in comments)' },
+          { t:'Rear right pressure recorded (note in comments)' },
+          { t:'Pressures compared to target — deviations noted for setup review' },
+        ]
+      },
+      { label:'Wheels',
+        items:[
+          { t:'All four wheel rims — inspect for cracks, buckles, kerbing damage' },
+          { t:'Wheel nuts torque-checked (calibrated torque wrench)' },
+          { t:'Valve stems — condition, no leaks' },
+          { t:'Wheel spacers (if fitted) — secure, no movement' },
+        ]
+      }
+    ]
+  },
+  // ── 4. BRAKES ───────────────────────────────────────
+  {
+    id:'brakes', title:'Braking System', kicker:'Section 04',
+    desc:'Post-event brake inspection. Allow cooling before handling discs and callipers.',
+    warn:{ type:'amber', msg:'⚠  Allow brakes to cool before inspection. Discs and callipers can remain dangerously hot after racing.' },
+    groups:[
+      { label:'Discs & Pads',
+        items:[
+          { t:'Front brake discs — wear measurement, cracking, heat checking or glazing' },
+          { t:'Rear brake discs — wear measurement, cracking, heat checking or glazing' },
+          { t:'Front brake pads — thickness measurement, even wear, replacement threshold check' },
+          { t:'Rear brake pads — thickness measurement, even wear, replacement threshold check' },
+          { t:'Disc temperature colours noted — excessive blue/purple may indicate overheating' },
+        ]
+      },
+      { label:'Hydraulics & Lines',
+        items:[
+          { t:'Brake fluid level in master cylinder reservoir — correct level, no contamination' },
+          { t:'All brake lines and hoses — inspect for chafing, leaks, abrasion' },
+          { t:'Brake callipers — no leaks, pistons not seized or dragging' },
+          { t:'Brake bias bar (if fitted) — position recorded, mechanism undamaged' },
+        ]
+      },
+      { label:'Pedal & Feel',
+        items:[
+          { t:'Brake pedal feel assessed by driver — any sponginess or fade reported' },
+          { t:'Handbrake / ratchet (if applicable) — function confirmed' },
+          { t:'Any brake warnings or issues from driver debrief recorded' },
+        ]
+      }
+    ]
+  },
+  // ── 5. SUSPENSION & STEERING ────────────────────────
+  {
+    id:'suspension', title:'Suspension & Steering', kicker:'Section 05',
+    desc:'Post-event suspension and steering inspection. Check for kerb damage, contact wear, and alignment issues.',
+    groups:[
+      { label:'Suspension Geometry',
+        items:[
+          { t:'Front ride height — measured and recorded (compare to pre-event target)' },
+          { t:'Rear ride height — measured and recorded' },
+          { t:'Front toe — visual check for any obvious post-event changes' },
+          { t:'Rear toe — visual check for any obvious post-event changes' },
+          { t:'Camber — visually consistent with pre-event setting' },
+        ]
+      },
+      { label:'Wishbones & Linkages',
+        items:[
+          { t:'Front upper wishbones (both) — inspect for kerb / contact damage, bent or cracked' },
+          { t:'Front lower wishbones (both) — same inspection' },
+          { t:'Rear upper wishbones (both) — inspect for damage' },
+          { t:'Rear lower wishbones (both) — inspect for damage' },
+          { t:'Push/pull rods (if fitted) — straight, no cracks, rose joints intact' },
+          { t:'Bell cranks / rockers — condition, bearings, mounting' },
+          { t:'Anti-roll bars and drop links — straight, connections tight' },
+        ]
+      },
+      { label:'Uprights, Hubs & Steering',
+        items:[
+          { t:'Uprights (all four) — no cracks, impact marks or deformation' },
+          { t:'Wheel hubs — secure, no looseness, bearing condition' },
+          { t:'Dampers / shock absorbers — check for leaks, physical damage' },
+          { t:'Springs — seated correctly on perches' },
+          { t:'Steering rack — no damage, correct free play' },
+          { t:'Track rod ends — tight, undamaged, threads intact' },
+          { t:'Steering column — no kinks, UJ condition' },
+        ]
+      }
+    ]
+  },
+  // ── 6. ENGINE & DRIVETRAIN ──────────────────────────
+  {
+    id:'engine', title:'Engine & Drivetrain', kicker:'Section 06',
+    desc:'Post-event engine, gearbox and drivetrain assessment.',
+    groups:[
+      { label:'Engine',
+        items:[
+          { t:'Engine oil level — check when cool, colour and condition noted' },
+          { t:'Coolant level — check header tank, no white residue indicating head gasket issue' },
+          { t:'Any oil or coolant leaks — inspect under engine and around hoses' },
+          { t:'Air filter — condition, any debris ingestion noted' },
+          { t:'Engine bay — visual check for loose components, chafed wires, displaced clips' },
+          { t:'Exhaust system — secure, no cracks or splits, heat wrap intact' },
+          { t:'Throttle cable / linkage — smooth operation, return spring working' },
+          { t:'Driver debrief engine notes (unusual noises, power loss etc.) recorded' },
+        ]
+      },
+      { label:'Gearbox & Drivetrain',
+        items:[
+          { t:'Gearbox oil level — check and record' },
+          { t:'Gearbox — any gear selection issues from driver debrief noted' },
+          { t:'Selector linkage / cables — secure, undamaged' },
+          { t:'Driveshafts / CV joints (if applicable) — boots intact, no clicking noted' },
+          { t:'Differential — no leaks, secure mounting' },
+          { t:'Clutch — driver feedback on operation, any slipping or judder noted' },
+        ]
+      }
+    ]
+  },
+  // ── 7. FUEL SYSTEM ──────────────────────────────────
+  {
+    id:'fuel', title:'Fuel System', kicker:'Section 07',
+    desc:'Post-event fuel system and fluid checks.',
+    warn:{ type:'red', msg:'⚠  No naked flames, sparks or smoking near the fuel system. Use the fuel system kill before any inspection.' },
+    groups:[
+      { label:'Fuel',
+        items:[
+          { t:'Fuel system kill switch — confirmed OFF before inspection' },
+          { t:'Fuel tank — no leaks, cap secure, breather lines undamaged' },
+          { t:'Fuel lines — no chafing, abrasion, or loose connectors' },
+          { t:'Fuel pump — secure mounting, no fuel weeping' },
+          { t:'Remaining fuel quantity recorded for consumption analysis' },
+          { t:'Fuel type used confirmed and recorded (for future mixing reference)' },
+        ]
+      },
+      { label:'Other Fluids',
+        items:[
+          { t:'Brake fluid — level and condition confirmed (Section 04 cross-check)' },
+          { t:'Power steering fluid (if applicable) — level correct, no leaks' },
+          { t:'Screen wash / visor wash — refill if required' },
+        ]
+      }
+    ]
+  },
+  // ── 8. SAFETY EQUIPMENT ─────────────────────────────
+  {
+    id:'safety', title:'Safety Equipment', kicker:'Section 08',
+    desc:'Post-event inspection of all driver and vehicle safety systems.',
+    groups:[
+      { label:'Driver Restraints & Protection',
+        items:[
+          { t:'Harness / seatbelt — webbing inspected for wear, cuts or UV damage' },
+          { t:'Harness anchor points — all mounts tight, no cracks in brackets' },
+          { t:'HANS device / tethers (if applicable) — condition and correct attachment confirmed' },
+          { t:'Seat — no cracks, mounts intact, still within homologation period (if FIA)' },
+          { t:'Head restraint / padding — condition, no deformation' },
+        ]
+      },
+      { label:'Fire & Emergency Systems',
+        items:[
+          { t:'Fire suppression system — bottles fully charged, trigger cable undamaged' },
+          { t:'Onboard extinguisher (if handheld) — still charged, bracket secure' },
+          { t:'Master kill switch (internal) — correct operation confirmed' },
+          { t:'External kill switch — operation confirmed, label visible and legible' },
+          { t:'Fire suppression activation handle — undamaged, accessible' },
+        ]
+      },
+      { label:'Miscellaneous Safety',
+        items:[
+          { t:'Safety net / door net (if fitted) — webbing, fixings, release mechanism' },
+          { t:'Tow loop / recovery hook — in place, undamaged' },
+          { t:'Mirrors (if required by regulations) — secure, correctly positioned' },
+          { t:'Required safety stickers / numbers still legible and in place' },
+        ]
+      }
+    ]
+  },
+  // ── 9. ELECTRICAL ───────────────────────────────────
+  {
+    id:'elec', title:'Electrical & Data', kicker:'Section 09',
+    desc:'Post-event electrical, data logging and telemetry checks.',
+    groups:[
+      { label:'Electrical Systems',
+        items:[
+          { t:'Battery — isolator OFF, terminal connections tight, casing undamaged' },
+          { t:'Wiring loom — no chafing, no connectors pulled out during session' },
+          { t:'Dashboard / display — powered down correctly, condition noted' },
+          { t:'Sensors (wheel speed, brake pressure etc.) — connections intact, no damage' },
+          { t:'Lights (if required) — all operational, mounts intact' },
+        ]
+      },
+      { label:'Data & Telemetry',
+        items:[
+          { t:'Data logger — data download confirmed and saved (name file with date/event)' },
+          { t:'ECU — download any error codes or fault logs' },
+          { t:'Lap timing data — exported and stored for driver debrief' },
+          { t:'Video footage (if fitted) — downloaded, backed up, SD card cleared' },
+          { t:'Tyre temperature / pressure logging data — downloaded if applicable' },
+        ]
+      }
+    ]
+  },
+  // ── 10. DRIVER DEBRIEF ──────────────────────────────
+  {
+    id:'debrief', title:'Driver Debrief', kicker:'Section 10',
+    desc:'Structured debrief with driver(s) after the event. Record all feedback for setup and development.',
+    warn:{ type:'blue', msg:'ℹ  Conduct debrief as soon as possible after the session while driver feedback is fresh.' },
+    groups:[
+      { label:'Performance Feedback',
+        items:[
+          { t:'Overall driver satisfaction with car performance discussed and noted' },
+          { t:'Lap time analysis completed — sectors reviewed' },
+          { t:'Braking points and brake performance discussed' },
+          { t:'Traction and wheelspin issues (front and rear) noted' },
+          { t:'Oversteer / understeer balance recorded per circuit section' },
+          { t:'Gear selection and gearbox issues discussed' },
+          { t:'Engine response — power delivery, any flat spots noted' },
+        ]
+      },
+      { label:'Setup Notes for Next Event',
+        items:[
+          { t:'Suspension changes recommended (ride height, camber, toe) documented' },
+          { t:'Aerodynamic changes recommended (wing angles, balance) documented' },
+          { t:'Tyre compound or pressure changes recommended documented' },
+          { t:'Brake bias changes recommended documented' },
+          { t:'Differential settings reviewed and changes noted' },
+          { t:'Driver feedback written up and filed in event report' },
+        ]
+      },
+      { label:'Driver Wellbeing',
+        items:[
+          { t:'Driver physically confirmed uninjured and fit after event' },
+          { t:'Any close calls or concerns from driver discussed and recorded' },
+          { t:'Driver hydration and fatigue assessed — particularly in hot conditions' },
+        ]
+      }
+    ]
+  },
+  // ── 11. EQUIPMENT & GARAGE ──────────────────────────
+  {
+    id:'garage', title:'Equipment & Garage', kicker:'Section 11',
+    desc:'Post-event garage, tooling, and support equipment checks.',
+    groups:[
+      { label:'Tooling & Equipment',
+        items:[
+          { t:'All tools accounted for — tool roll / shadow board checked' },
+          { t:'Air lines, compressors — depressurised and packed away safely' },
+          { t:'Tyre equipment (guns, compressors, warmers) — packed and powered down' },
+          { t:'Fuel dump cans — sealed, stored safely away from ignition sources' },
+          { t:'Torque wrenches — zeroed and stored correctly' },
+          { t:'Data equipment (laptops, loggers) — charged and stored safely' },
+        ]
+      },
+      { label:'Transporter / Trailer',
+        items:[
+          { t:'Vehicle(s) loaded onto transporter — secured with straps at all four corners' },
+          { t:'Tyre chocks in place on transporter' },
+          { t:'All equipment loaded — nothing left in garage or paddock' },
+          { t:'Transporter doors secured — checked front and rear' },
+          { t:'Transporter tyre pressures checked before road departure' },
+          { t:'Transporter lights and signals confirmed working' },
+        ]
+      },
+      { label:'Paddock Area',
+        items:[
+          { t:'Paddock area swept — no litter, debris, or tyre rubber left behind' },
+          { t:'Awning / gazebo packed away or secured if staying overnight' },
+          { t:'Generators powered off, cooled, and secured' },
+          { t:'Signage / barriers collected and stored' },
+          { t:'Paddock area left clean and tidy — comply with circuit requirements' },
+        ]
+      }
+    ]
+  },
+  // ── 12. ADMINISTRATION ──────────────────────────────
+  {
+    id:'admin', title:'Administration', kicker:'Section 12',
+    desc:'Post-event admin, compliance, and documentation requirements.',
+    groups:[
+      { label:'Race & Technical Documentation',
+        items:[
+          { t:'Race / session results printed or saved' },
+          { t:'Technical scrutineering results / compliance notes filed' },
+          { t:'Any technical protests or issues from the event noted' },
+          { t:'Homologation paperwork (car and helmet etc.) confirmed up to date' },
+          { t:'Any regulation changes announced at the event briefing recorded' },
+        ]
+      },
+      { label:'Incident Reporting',
+        items:[
+          { t:'Any on-track incidents formally reported (stewards, MSA/Motorsport UK)' },
+          { t:'Near-miss or H&S incident report completed if required' },
+          { t:'Any damage claims submitted to insurance if applicable' },
+          { t:'Medical / first aid forms completed if treatment was given' },
+        ]
+      },
+      { label:'Development & Records',
+        items:[
+          { t:'Event debrief notes compiled into event report document' },
+          { t:'Data and video backed up to secure storage (cloud/drive)' },
+          { t:'Photographs of car condition taken and stored' },
+          { t:'Next event preparation list drafted based on today\'s findings' },
+          { t:'Any parts to be ordered identified — list created with lead times' },
+          { t:'Learner / student log hours and activities updated' },
+        ]
+      }
+    ]
+  },
+  // ── 13. SUMMARY ─────────────────────────────────────
+  {
+    id:'summary', title:'Summary & Sign-Off', kicker:'Section 13',
+    desc:'Overall event assessment, action items, and sign-off.',
+    isSummary: true
+  }
+];
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+const state = {
+  checks: {},
+  outcome: null,
+  actions: Array.from({length:10}, () => ({ item:'', owner:'', due:'', priority:'' })),
+  comments: '',
+  signoff: { l1:'', l2:'', d1:'', t1:'', t2:'', d2:'' }
+};
+let current = 0;
+
+function cid(sid, gi, ii) { return `${sid}_${gi}_${ii}`; }
+
+// ══════════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════════
+function buildNav() {
+  const nav = document.getElementById('navList');
+  nav.innerHTML = '';
+  SECTIONS.forEach((sec, i) => {
+    const total = sec.groups ? sec.groups.reduce((a,g) => a+g.items.length, 0) : 0;
+    const done = sec.groups ? sec.groups.reduce((a,g,gi) => a + g.items.filter((_,ii) => state.checks[cid(sec.id,gi,ii)]?.ticked).length, 0) : 0;
+    const flagged = sec.groups ? sec.groups.reduce((a,g,gi) => a + g.items.filter((_,ii) => state.checks[cid(sec.id,gi,ii)]?.status === 'issue').length, 0) : 0;
+    const div = document.createElement('div');
+    div.className = 'nav-item' + (i === current ? ' active' : '');
+    let badgeClass = '', badgeText = '';
+    if (total > 0) {
+      if (done === total) { badgeClass = 'complete'; badgeText = '✓'; }
+      else if (flagged > 0) { badgeClass = 'issues'; badgeText = flagged + ' ⚑'; }
+      else if (done > 0) { badgeClass = 'partial'; badgeText = done + '/' + total; }
+      else badgeText = '0/' + total;
+    }
+    div.innerHTML = `
+      <span class="nav-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="nav-label">${sec.title}</span>
+      ${total > 0 ? `<span class="nav-badge ${badgeClass}">${badgeText}</span>` : ''}`;
+    div.onclick = () => goTo(i);
+    nav.appendChild(div);
+  });
+}
+
+function buildMain() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = '';
+  SECTIONS.forEach((sec, si) => {
+    const panel = document.createElement('div');
+    panel.className = 'panel' + (si === current ? ' active' : '');
+    panel.id = `pnl-${si}`;
+    panel.innerHTML = sec.isSummary ? summaryHTML() : sectionHTML(sec, si);
+    main.appendChild(panel);
+  });
+}
+
+function sectionHTML(sec, si) {
+  let warn = '';
+  if (sec.warn) {
+    warn = `<div class="warn-banner ${sec.warn.type}"><span>${sec.warn.msg}</span></div>`;
+  }
+
+  const total = sec.groups.reduce((a,g) => a+g.items.length, 0);
+  const done = sec.groups.reduce((a,g,gi) => a + g.items.filter((_,ii) => state.checks[cid(sec.id,gi,ii)]?.ticked).length, 0);
+  const flagged = sec.groups.reduce((a,g,gi) => a + g.items.filter((_,ii) => state.checks[cid(sec.id,gi,ii)]?.status === 'issue').length, 0);
+
+  let items = '';
+  sec.groups.forEach((grp, gi) => {
+    items += `<div class="grp"><div class="grp-label">${grp.label}</div>
+      <div class="col-heads">
+        <div class="col-head"></div>
+        <div class="col-head" style="padding-left:12px">Item</div>
+        <div class="col-head">Status</div>
+        <div class="col-head">Priority</div>
+        <div class="col-head">Notes</div>
+      </div>`;
+    grp.items.forEach((item, ii) => {
+      const id = cid(sec.id, gi, ii);
+      const s = state.checks[id] || {};
+      const isTicked = !!s.ticked;
+      const isFlagged = s.status === 'issue';
+      items += `<div class="ci ${isTicked?'ticked':''} ${isFlagged?'flagged':''} ${s.status==='na'?'na-item':''}" id="ci-${id}">
+        <div class="ci-check" onclick="tick('${id}')">
+          ${isTicked
+            ? `<svg viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+            : `<svg viewBox="0 0 24 24" fill="none" stroke="#383B44" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`}
+        </div>
+        <div class="ci-label">${item.t}</div>
+        <div class="ci-status">
+          <select onchange="setStatus('${id}',this.value)">
+            <option value="" ${!s.status?'selected':''}>— Select —</option>
+            <option value="ok" ${s.status==='ok'?'selected':''}>✓ OK / Done</option>
+            <option value="issue" ${s.status==='issue'?'selected':''}>⚑ Issue Found</option>
+            <option value="na" ${s.status==='na'?'selected':''}>N/A</option>
+            <option value="monitor" ${s.status==='monitor'?'selected':''}>Monitor</option>
+            <option value="deferred" ${s.status==='deferred'?'selected':''}>Deferred</option>
+          </select>
+        </div>
+        <div class="ci-priority">
+          <select onchange="setPriority('${id}',this.value)" title="Priority">
+            <option value="" ${!s.priority?'selected':''}>—</option>
+            <option value="H" ${s.priority==='H'?'selected':''}>H</option>
+            <option value="M" ${s.priority==='M'?'selected':''}>M</option>
+            <option value="L" ${s.priority==='L'?'selected':''}>L</option>
+          </select>
+        </div>
+        <div class="ci-notes">
+          <input type="text" placeholder="Add notes…" value="${(s.notes||'').replace(/"/g,'&quot;')}" onchange="setNotes('${id}',this.value)">
+        </div>
+      </div>`;
+    });
+    items += `</div>`;
+  });
+
+  const prev = si > 0 ? `<button class="nbtn" onclick="goTo(${si-1})">← Previous</button>` : '';
+  const next = si < SECTIONS.length-1 ? `<button class="nbtn fwd" onclick="goTo(${si+1})">Next Section →</button>` : '';
+
+  return `
+    <div class="panel-header">
+      <div class="ph-kicker">${sec.kicker}</div>
+      <div class="ph-title">${sec.title}</div>
+      <div class="ph-desc">${sec.desc}</div>
+    </div>
+    ${warn}
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-dot" style="background:var(--green)"></div><span class="sv">${done}</span> done</div>
+      <div class="stat"><div class="stat-dot" style="background:var(--red)"></div><span class="sv">${flagged}</span> issues</div>
+      <div class="stat"><div class="stat-dot" style="background:var(--rule2)"></div><span class="sv">${total-done}</span> remaining</div>
+    </div>
+    <div class="panel-body">${items}</div>
+    <div class="nav-btns">${prev}${next}</div>`;
+}
+
+function summaryHTML() {
+  let total=0, done=0, flagged=0;
+  SECTIONS.forEach(sec => {
+    if (!sec.groups) return;
+    sec.groups.forEach((g,gi) => g.items.forEach((_,ii) => {
+      const s = state.checks[cid(sec.id,gi,ii)];
+      total++; if(s?.ticked) done++; if(s?.status==='issue') flagged++;
+    }));
+  });
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  const actionRows = state.actions.map((a,i) => `
+    <tr>
+      <td class="rn">${i+1}</td>
+      <td><input type="text" placeholder="Action item…" value="${a.item}" onchange="state.actions[${i}].item=this.value"></td>
+      <td><input type="text" placeholder="Owner" value="${a.owner}" onchange="state.actions[${i}].owner=this.value"></td>
+      <td><input type="date" value="${a.due}" onchange="state.actions[${i}].due=this.value"></td>
+      <td><select onchange="state.actions[${i}].priority=this.value">
+        <option value="" ${!a.priority?'selected':''}>—</option>
+        <option value="H" ${a.priority==='H'?'selected':''}>H — High</option>
+        <option value="M" ${a.priority==='M'?'selected':''}>M — Medium</option>
+        <option value="L" ${a.priority==='L'?'selected':''}>L — Low</option>
+      </select></td>
+    </tr>`).join('');
+
+  const si = SECTIONS.length - 1;
+  return `
+    <div class="panel-header">
+      <div class="ph-kicker">Section 13</div>
+      <div class="ph-title">Summary & <em>Sign-Off</em></div>
+      <div class="ph-desc">Overall event assessment outcome, action items for next event, and sign-off.</div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-dot" style="background:var(--green)"></div><span class="sv">${done}/${total}</span> checked</div>
+      <div class="stat"><div class="stat-dot" style="background:var(--red)"></div><span class="sv">${flagged}</span> issues</div>
+      <div class="stat"><div class="stat-dot" style="background:var(--gold)"></div><span class="sv">${pct}%</span> complete</div>
+    </div>
+    <div class="panel-body">
+
+      <div class="grp">
+        <div class="grp-label">Overall Event Outcome</div>
+        <div class="outcome-row">
+          <div class="oc ${state.outcome==='good'?'sel-green':''}" onclick="setOutcome('good')">
+            <div class="oc-icon">🏁</div>
+            <div class="oc-label g">SUCCESSFUL</div>
+            <div class="oc-desc">Event completed with no significant issues</div>
+          </div>
+          <div class="oc ${state.outcome==='minor'?'sel-amber':''}" onclick="setOutcome('minor')">
+            <div class="oc-icon">⚠️</div>
+            <div class="oc-label a">MINOR ISSUES</div>
+            <div class="oc-desc">Some items need attention before next event</div>
+          </div>
+          <div class="oc ${state.outcome==='major'?'sel-red':''}" onclick="setOutcome('major')">
+            <div class="oc-icon">🔴</div>
+            <div class="oc-label r">SIGNIFICANT ISSUES</div>
+            <div class="oc-desc">Major work or investigation required</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-label">Action Items for Next Event</div>
+        <div class="action-table">
+          <table>
+            <thead><tr><th>#</th><th>Action Item</th><th>Owner</th><th>Due By</th><th>Priority</th></tr></thead>
+            <tbody>${actionRows}</tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-label">Overall Comments & Observations</div>
+        <div class="textarea-field">
+          <textarea placeholder="Summary of event, key learnings, any notable issues or achievements…" onchange="state.comments=this.value">${state.comments}</textarea>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-label">Sign-Off</div>
+        <div class="so-grid">
+          <div class="so-f"><label>Lead Technician / Learner Name</label><input type="text" value="${state.signoff.l1}" onchange="state.signoff.l1=this.value"></div>
+          <div class="so-f"><label>Signature (type full name)</label><input type="text" placeholder="Type full name as signature" value="${state.signoff.l2}" onchange="state.signoff.l2=this.value"></div>
+          <div class="so-f"><label>Date Completed</label><input type="date" value="${state.signoff.d1}" onchange="state.signoff.d1=this.value"></div>
+          <div class="so-f"><label>Tutor / Supervisor Name</label><input type="text" value="${state.signoff.t1}" onchange="state.signoff.t1=this.value"></div>
+          <div class="so-f"><label>Tutor Signature (type full name)</label><input type="text" placeholder="Type full name as signature" value="${state.signoff.t2}" onchange="state.signoff.t2=this.value"></div>
+          <div class="so-f"><label>Date Countersigned</label><input type="date" value="${state.signoff.d2}" onchange="state.signoff.d2=this.value"></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="nav-btns">
+      <button class="nbtn" onclick="goTo(${si-1})">← Previous</button>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  INTERACTIONS
+// ══════════════════════════════════════════════════════
+function tick(id) {
+  if (!state.checks[id]) state.checks[id] = {};
+  state.checks[id].ticked = !state.checks[id].ticked;
+  const el = document.getElementById(`ci-${id}`);
+  if (el) {
+    el.classList.toggle('ticked', state.checks[id].ticked);
+    const ck = el.querySelector('.ci-check');
+    ck.innerHTML = state.checks[id].ticked
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="#383B44" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`;
+  }
+  updatePill();
+  buildNav();
+}
+
+function setStatus(id, val) {
+  if (!state.checks[id]) state.checks[id] = {};
+  state.checks[id].status = val;
+  const el = document.getElementById(`ci-${id}`);
+  if (el) {
+    el.classList.toggle('flagged', val === 'issue');
+    el.classList.toggle('na-item', val === 'na');
+  }
+}
+
+function setPriority(id, val) {
+  if (!state.checks[id]) state.checks[id] = {};
+  state.checks[id].priority = val;
+}
+
+function setNotes(id, val) {
+  if (!state.checks[id]) state.checks[id] = {};
+  state.checks[id].notes = val;
+}
+
+function setOutcome(val) {
+  state.outcome = val;
+  document.querySelectorAll('.oc').forEach(c => c.classList.remove('sel-green','sel-amber','sel-red'));
+  const map = { good:'sel-green', minor:'sel-amber', major:'sel-red' };
+  const idx = { good:0, minor:1, major:2 };
+  const cards = document.querySelectorAll('.oc');
+  if (cards[idx[val]]) cards[idx[val]].classList.add(map[val]);
+}
+
+function goTo(i) {
+  current = i;
+  document.querySelectorAll('.panel').forEach((p,pi) => p.classList.toggle('active', pi===i));
+  document.querySelectorAll('.nav-item').forEach((n,ni) => n.classList.toggle('active', ni===i));
+  if (i === SECTIONS.length-1) {
+    document.getElementById(`pnl-${i}`).innerHTML = summaryHTML();
+  }
+  window.scrollTo(0,0);
+  buildNav();
+}
+
+function updatePill() {
+  let total=0, done=0;
+  SECTIONS.forEach(sec => {
+    if (!sec.groups) return;
+    sec.groups.forEach((g,gi) => g.items.forEach((_,ii) => {
+      total++;
+      if (state.checks[cid(sec.id,gi,ii)]?.ticked) done++;
+    }));
+  });
+  document.getElementById('pillVal').textContent = done;
+  document.getElementById('pillTotal').textContent = total;
+}
+
+// ══════════════════════════════════════════════════════
+//  PDF GENERATION
+// ══════════════════════════════════════════════════════
+function generatePDF() {
+  const btn = document.getElementById('pdfBtn');
+  btn.textContent = '⏳ Generating…';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+      const PW=210, PH=297, ML=13, MR=13;
+      const CW = PW - ML - MR;
+      let y = 14, pg = 1;
+
+      // Palette
+      const GOLD=[132,204,22], GOLD_L=[163,230,53];
+      const DARK=[14,15,17], INK=[30,32,36], INK2=[37,40,48];
+      const RULE=[56,59,68], MID=[107,114,128], DIM=[156,163,175];
+      const TXT=[232,234,240], WHITE=[255,255,255];
+      const GREEN=[52,211,153], RED=[248,113,113], BLUE=[96,165,250];
+      const PALE_GOLD=[244,251,230], PALE_RED=[255,245,245], PALE_GREEN=[245,255,250];
+      const PALE_GREY=[248,248,250];
+
+      // Get event fields
+      const ev = {
+        event: document.getElementById('f-event').value,
+        venue: document.getElementById('f-venue').value,
+        date: document.getElementById('f-date').value,
+        series: document.getElementById('f-series').value,
+        cars: document.getElementById('f-cars').value,
+        session: document.getElementById('f-session').value,
+        weather: document.getElementById('f-weather').value,
+        tech: document.getElementById('f-tech').value,
+        learners: document.getElementById('f-learners').value,
+        tutor: document.getElementById('f-tutor').value,
+        incidents: document.getElementById('f-incidents').value,
+      };
+
+      function hdr() {
+        doc.setFillColor(...INK);
+        doc.rect(0,0,PW,10,'F');
+        doc.setFillColor(...GOLD_L);
+        doc.rect(0,0,4,10,'F');
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(7);
+        doc.setTextColor(...DIM);
+        doc.text(`LEVEL 3 MOTORSPORT  |  POST-EVENT CHECKLIST  |  ${ev.venue||'—'}  |  ${ev.date||'—'}`, 8, 6.5);
+        doc.setTextColor(...GOLD_L);
+        doc.text(`Pg ${pg}`, PW-MR, 6.5, {align:'right'});
+        y = 15;
+      }
+
+      function ftr() {
+        doc.setFillColor(...DARK);
+        doc.rect(0,PH-8,PW,8,'F');
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(6.5);
+        doc.setTextColor(...RULE);
+        doc.text('CONFIDENTIAL — Level 3 Motorsport Assessment Portfolio', ML, PH-3);
+        doc.text('Post-Event Documentation Record', PW-MR, PH-3, {align:'right'});
+      }
+
+      function np(need=12) {
+        if (y+need > PH-12) { ftr(); doc.addPage(); pg++; hdr(); }
+      }
+
+      function secBanner(title, kicker) {
+        np(14);
+        doc.setFillColor(...INK2);
+        doc.rect(ML, y, CW, 12, 'F');
+        doc.setFillColor(...GOLD_L);
+        doc.rect(ML, y, 3, 12, 'F');
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(7);
+        doc.setTextColor(...GOLD_L);
+        doc.text(kicker.toUpperCase(), ML+6, y+4);
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(12);
+        doc.setTextColor(...TXT);
+        doc.text(title.toUpperCase(), ML+6, y+9.5);
+        y += 15;
+      }
+
+      function grpHdr(label) {
+        np(9);
+        y += 2;
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(7);
+        doc.setTextColor(...GOLD_L);
+        doc.text(label.toUpperCase(), ML, y+3);
+        doc.setDrawColor(...GOLD);
+        doc.setLineWidth(0.25);
+        doc.line(ML, y+4.5, ML+CW, y+4.5);
+        doc.setLineWidth(0.1);
+        y += 7;
+      }
+
+      function ciRow(label, ticked, status, priority, notes) {
+        const statMap = { ok:'OK', issue:'ISSUE', na:'N/A', monitor:'MONITOR', deferred:'DEFERRED', '':'—' };
+        const statLabel = statMap[status] || '—';
+        const lines = doc.splitTextToSize(label, CW-54);
+        const rh = Math.max(7, lines.length*4.2+3);
+        np(rh+2);
+
+        let bg = WHITE;
+        if (status==='issue') bg=PALE_RED;
+        else if (ticked) bg=PALE_GREEN;
+        else if (status==='na') bg=PALE_GREY;
+
+        doc.setFillColor(...bg);
+        doc.rect(ML, y, CW, rh, 'F');
+
+        // checkbox
+        const cx=ML+2.5, cy=y+rh/2-2;
+        doc.setFillColor(...WHITE);
+        doc.setDrawColor(...RULE);
+        doc.rect(cx, cy, 4, 4, 'FD');
+        if (ticked) {
+          doc.setDrawColor(...GREEN);
+          doc.setLineWidth(0.6);
+          doc.line(cx+0.6, cy+2, cx+1.5, cy+3.2);
+          doc.line(cx+1.5, cy+3.2, cx+3.4, cy+0.9);
+          doc.setLineWidth(0.1);
+        }
+
+        // label
+        doc.setFont('helvetica', ticked?'normal':'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...(ticked ? DIM : DARK));
+        lines.forEach((l,li) => doc.text(l, ML+8.5, y+4.5+li*4.2));
+
+        // status badge
+        const sx = ML+CW-42;
+        let scol = RULE;
+        if (status==='ok') scol=GREEN;
+        else if (status==='issue') scol=RED;
+        else if (status==='monitor') scol=BLUE;
+        else if (status==='deferred') scol=GOLD_L;
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(6.5);
+        doc.setTextColor(...scol);
+        doc.text(statLabel, sx+11, y+rh/2+1, {align:'center'});
+
+        // priority
+        if (priority) {
+          const pcol = priority==='H'?RED : priority==='M'?GOLD_L : DIM;
+          doc.setFont('helvetica','bold');
+          doc.setFontSize(7);
+          doc.setTextColor(...pcol);
+          doc.text(priority, ML+CW-8, y+rh/2+1, {align:'center'});
+        }
+
+        // notes
+        if (notes && notes.trim()) {
+          const nl = doc.splitTextToSize('↳ '+notes, CW-10);
+          doc.setFont('helvetica','italic');
+          doc.setFontSize(6.5);
+          doc.setTextColor(...MID);
+          np(nl.length*3.5+1);
+          nl.forEach((n,ni) => doc.text(n, ML+8.5, y+rh+2+ni*3.5));
+          y += rh + nl.length*3.5 + 2;
+        } else {
+          y += rh;
+        }
+        doc.setDrawColor(...RULE);
+        doc.setLineWidth(0.1);
+        doc.rect(ML, y-rh-(notes&&notes.trim()?0:0), CW, rh, 'S');
+      }
+
+      // ── COVER PAGE ──
+      doc.setFillColor(...DARK);
+      doc.rect(0,0,PW,PH,'F');
+
+      // Chequered accent strip
+      for (let xi=0; xi<PW; xi+=8) {
+        doc.setFillColor(xi%16===0?30:22, xi%16===0?32:24, xi%16===0?36:28);
+        doc.rect(xi, PH-16, 8, 16, 'F');
+      }
+      doc.setFillColor(...GOLD_L);
+      doc.rect(0, PH-16, PW, 1.5, 'F');
+
+      // Gold left bar
+      doc.setFillColor(...GOLD_L);
+      doc.rect(0, 0, 6, PH, 'F');
+
+      // Title block
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      doc.setTextColor(...GOLD_L);
+      doc.text('LEVEL 3 MOTORSPORT', 16, 55);
+
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(48);
+      doc.setTextColor(...TXT);
+      doc.text('POST-EVENT', 16, 88);
+      doc.setTextColor(...GOLD_L);
+      doc.text('CHECKLIST', 16, 112);
+
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(10);
+      doc.setTextColor(...MID);
+      doc.text('Complete after every motorsport event', 16, 126);
+      doc.text('For compliance, maintenance & safety records', 16, 133);
+
+      // Event card
+      doc.setFillColor(...INK);
+      doc.rect(16, 148, PW-32, 110, 'F');
+      doc.setDrawColor(...GOLD);
+      doc.setLineWidth(0.4);
+      doc.rect(16, 148, PW-32, 110, 'S');
+      doc.setLineWidth(0.1);
+      doc.setFillColor(...GOLD_L);
+      doc.rect(16, 148, PW-32, 10, 'F');
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...DARK);
+      doc.text('EVENT DETAILS', 22, 154.5);
+
+      const evFields = [
+        ['Event / Race Name', ev.event],
+        ['Circuit / Venue', ev.venue],
+        ['Event Date', ev.date],
+        ['Championship / Series', ev.series],
+        ['Car Number(s)', ev.cars],
+        ['Session Type', ev.session],
+        ['Weather Conditions', ev.weather],
+        ['Lead Technician', ev.tech],
+        ['Learner(s) on Site', ev.learners],
+        ['Tutor / Supervisor', ev.tutor],
+      ];
+      const col1 = evFields.slice(0,5), col2 = evFields.slice(5);
+      col1.forEach(([lbl,val],i) => {
+        const fy = 164+i*9;
+        doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...MID);
+        doc.text(lbl+':', 22, fy);
+        doc.setFont('helvetica','bold'); doc.setTextColor(...TXT);
+        doc.text(val||'—', 22, fy+4);
+      });
+      col2.forEach(([lbl,val],i) => {
+        const fy = 164+i*9;
+        doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...MID);
+        doc.text(lbl+':', PW/2+4, fy);
+        doc.setFont('helvetica','bold'); doc.setTextColor(...TXT);
+        doc.text(val||'—', PW/2+4, fy+4);
+      });
+
+      // overall stats
+      let tot=0, dn=0, fl=0;
+      SECTIONS.forEach(sec => {
+        if (!sec.groups) return;
+        sec.groups.forEach((g,gi) => g.items.forEach((_,ii) => {
+          const s = state.checks[cid(sec.id,gi,ii)];
+          tot++; if(s?.ticked) dn++; if(s?.status==='issue') fl++;
+        }));
+      });
+      doc.setFillColor(...INK2);
+      doc.rect(16, 262, PW-32, 18, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...GREEN);
+      doc.text(`${dn}/${tot} Checked`, 22, 271);
+      doc.setTextColor(...RED);
+      doc.text(`${fl} Issues`, 80, 271);
+      doc.setTextColor(...GOLD_L);
+      doc.text(`${tot>0?Math.round(dn/tot*100):0}% Complete`, 130, 271);
+
+      ftr();
+
+      // ── CHECKLIST SECTIONS ──
+      SECTIONS.forEach((sec, si) => {
+        if (sec.isSummary) return;
+        doc.addPage(); pg++; hdr();
+        secBanner(sec.title, sec.kicker);
+
+        if (sec.warn) {
+          np(10);
+          const wBg = sec.warn.type==='red'?PALE_RED : sec.warn.type==='blue'?[240,248,255] : PALE_GOLD;
+          const wCol = sec.warn.type==='red'?RED : sec.warn.type==='blue'?BLUE : GOLD_L;
+          doc.setFillColor(...wBg);
+          const wlines = doc.splitTextToSize(sec.warn.msg, CW-6);
+          const wh = wlines.length*4+5;
+          doc.rect(ML, y, CW, wh, 'F');
+          doc.setDrawColor(...wCol); doc.rect(ML, y, CW, wh, 'S');
+          doc.setFillColor(...wCol); doc.rect(ML, y, 2, wh, 'F');
+          doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...wCol);
+          wlines.forEach((wl,wi) => doc.text(wl, ML+4, y+4+wi*4));
+          y += wh+3;
+        }
+
+        sec.groups.forEach((grp, gi) => {
+          grpHdr(grp.label);
+          grp.items.forEach((item, ii) => {
+            const id = cid(sec.id, gi, ii);
+            const s = state.checks[id] || {};
+            ciRow(item.t, !!s.ticked, s.status||'', s.priority||'', s.notes||'');
+          });
+        });
+        ftr();
+      });
+
+      // ── SUMMARY PAGE ──
+      doc.addPage(); pg++; hdr();
+      secBanner('Summary & Sign-Off', 'Section 13');
+
+      // Outcome
+      grpHdr('Overall Event Outcome');
+      np(16);
+      const outcomes = [
+        {key:'good', label:'SUCCESSFUL', col:GREEN},
+        {key:'minor', label:'MINOR ISSUES', col:GOLD_L},
+        {key:'major', label:'SIGNIFICANT ISSUES', col:RED},
+      ];
+      const bw = (CW-4)/3;
+      outcomes.forEach((o,oi) => {
+        const bx = ML+oi*(bw+2);
+        const sel = state.outcome===o.key;
+        doc.setFillColor(...(sel?o.col:PALE_GREY));
+        doc.rect(bx, y, bw, 10, 'F');
+        doc.setDrawColor(...o.col); doc.setLineWidth(sel?0.6:0.15); doc.rect(bx, y, bw, 10, 'S'); doc.setLineWidth(0.1);
+        doc.setFont('helvetica','bold'); doc.setFontSize(7);
+        doc.setTextColor(...(sel?WHITE:o.col));
+        doc.text(o.label, bx+bw/2, y+6, {align:'center'});
+      });
+      y += 14;
+
+      // Actions table
+      grpHdr('Action Items for Next Event');
+      np(10);
+      const actData = state.actions.filter(a=>a.item).map((a,i)=>[i+1, a.item, a.owner||'—', a.due||'—', a.priority||'—']);
+      if (!actData.length) actData.push(['—','No actions recorded','—','—','—']);
+      doc.autoTable({
+        startY: y,
+        head:[['#','Action Item','Owner','Due By','Priority']],
+        body: actData,
+        margin:{left:ML,right:MR},
+        tableWidth: CW,
+        styles:{fontSize:8, cellPadding:2.5, textColor:DARK, lineColor:RULE, lineWidth:0.1},
+        headStyles:{fillColor:INK2, textColor:GOLD_L, fontStyle:'bold', fontSize:7.5},
+        columnStyles:{0:{cellWidth:10}, 2:{cellWidth:25}, 3:{cellWidth:25}, 4:{cellWidth:20}},
+        alternateRowStyles:{fillColor:PALE_GREY},
+      });
+      y = doc.lastAutoTable.finalY+6;
+
+      // Comments
+      grpHdr('Comments & Observations');
+      np(18);
+      doc.setFillColor(...PALE_GREY);
+      doc.rect(ML, y, CW, 18, 'F');
+      doc.setDrawColor(...RULE); doc.rect(ML, y, CW, 18, 'S');
+      if (state.comments) {
+        const cl = doc.splitTextToSize(state.comments, CW-6);
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...DARK);
+        cl.slice(0,4).forEach((c,ci) => doc.text(c, ML+3, y+5+ci*4));
+      }
+      y += 20;
+
+      // Incidents
+      if (ev.incidents) {
+        grpHdr('Event Incidents / Notes');
+        np(14);
+        doc.setFillColor(...PALE_GOLD);
+        const il = doc.splitTextToSize(ev.incidents, CW-6);
+        const ih = il.length*4+6;
+        doc.rect(ML, y, CW, ih, 'F');
+        doc.setDrawColor(...GOLD); doc.rect(ML, y, CW, ih, 'S');
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...DARK);
+        il.forEach((l,li) => doc.text(l, ML+3, y+5+li*4));
+        y += ih+4;
+      }
+
+      // Sign-off
+      grpHdr('Sign-Off');
+      const sof = [
+        ['Lead Technician / Learner', state.signoff.l1],
+        ['Signature', state.signoff.l2],
+        ['Date Completed', state.signoff.d1],
+        ['Tutor / Supervisor', state.signoff.t1],
+        ['Tutor Signature', state.signoff.t2],
+        ['Date Countersigned', state.signoff.d2],
+      ];
+      sof.forEach(([lbl, val]) => {
+        np(7);
+        doc.setFillColor(...PALE_GREY);
+        doc.rect(ML, y, 50, 6, 'F');
+        doc.setDrawColor(...RULE); doc.rect(ML, y, 50, 6, 'S'); doc.rect(ML+50, y, CW-50, 6, 'S');
+        doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...MID);
+        doc.text(lbl, ML+2, y+4);
+        doc.setFont('helvetica','normal'); doc.setTextColor(...DARK);
+        doc.text(val||'—', ML+52, y+4);
+        y += 6;
+      });
+
+      y += 6; np(8);
+      doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(...MID);
+      doc.text('This document forms part of the Level 3 Motorsport qualification portfolio. Retain for assessment and compliance records.', PW/2, y, {align:'center'});
+
+      ftr();
+
+      // ── SAVE ──
+      const venue = ev.venue ? ev.venue.replace(/[^a-z0-9]/gi,'_') : 'Event';
+      const date = ev.date || new Date().toISOString().slice(0,10);
+      doc.save(`Post_Event_Checklist_${venue}_${date}.pdf`);
+
+    } catch(err) {
+      alert('PDF error: '+err.message);
+      console.error(err);
+    }
+    btn.textContent = '⬇ Download PDF';
+    btn.disabled = false;
+  }, 60);
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+buildNav();
+buildMain();
+updatePill();
+</script>
+</body>
+</html>
