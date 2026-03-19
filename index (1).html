@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motorsport Suite — Level 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090E;--s1:#0C0F18;--s2:#11151F;--s3:#161C2A;
+  --border:#1E2638;--border2:#28334A;--muted:#3A4A66;--dim:#5A6E90;
+  --text:#C8D5F0;--text2:#8898C0;
+  --fh:'Barlow Condensed',sans-serif;--fb:'Barlow',sans-serif;--fm:'JetBrains Mono',monospace;--fd:'Bebas Neue',cursive;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--fh);min-height:100vh;overflow-x:hidden;}
+
+/* ── SCANLINE OVERLAY ── */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:0;}
+
+/* ── GRID BACKGROUND ── */
+.grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0;}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:200;background:rgba(7,9,14,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-logo{font-family:var(--fd);font-size:20px;letter-spacing:3px;color:#fff;}
+.nav-logo em{color:var(--accent);font-style:normal;}
+.nav-badge{font-family:var(--fm);font-size:9px;letter-spacing:2px;padding:3px 8px;border-radius:2px;border:1px solid var(--border2);color:var(--dim);}
+.nav-right{display:flex;align-items:center;gap:6px;}
+.nav-link{font-family:var(--fm);font-size:10px;letter-spacing:1px;color:var(--dim);padding:5px 10px;border-radius:3px;cursor:pointer;transition:color 0.15s;text-decoration:none;}
+.nav-link:hover{color:var(--text);}
+
+/* ── HERO ── */
+.hero{position:relative;z-index:1;padding:80px 28px 60px;display:flex;flex-direction:column;align-items:flex-start;max-width:1400px;margin:0 auto;}
+.hero-kicker{font-family:var(--fm);font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.hero-kicker::before{content:'';width:40px;height:1px;background:var(--muted);}
+.hero-title{font-family:var(--fd);font-size:clamp(56px,8vw,110px);line-height:0.92;letter-spacing:2px;color:#fff;margin-bottom:8px;}
+.hero-title .accent{display:block;}
+.hero-sub{font-family:var(--fh);font-size:clamp(14px,2vw,18px);color:var(--text2);font-weight:300;letter-spacing:1px;margin-bottom:36px;max-width:600px;}
+.hero-stats{display:flex;gap:32px;flex-wrap:wrap;}
+.hs{display:flex;flex-direction:column;gap:2px;}
+.hs-val{font-family:var(--fd);font-size:36px;line-height:1;}
+.hs-lbl{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+
+/* ── CATEGORY FILTERS ── */
+.filters{position:relative;z-index:1;padding:0 28px 24px;max-width:1400px;margin:0 auto;display:flex;gap:8px;flex-wrap:wrap;}
+.filter-btn{font-family:var(--fm);font-size:10px;letter-spacing:1.5px;padding:7px 14px;border-radius:3px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;transition:all 0.15s;text-transform:uppercase;}
+.filter-btn:hover{border-color:var(--dim);color:var(--text2);}
+.filter-btn.active{color:#000;font-weight:700;}
+
+/* ── APP GRID ── */
+.grid-section{position:relative;z-index:1;padding:0 28px 80px;max-width:1400px;margin:0 auto;}
+.apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
+
+/* ── APP CARD ── */
+.app-card{position:relative;background:var(--s1);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform 0.2s ease,border-color 0.2s ease,box-shadow 0.2s ease;text-decoration:none;display:block;}
+.app-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.2s;background:var(--card-glow);}
+.app-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.4);}
+.app-card:hover::before{opacity:1;}
+.app-card.hidden{display:none;}
+
+/* Card accent bar */
+.card-accent{height:3px;width:100%;}
+
+/* Card body */
+.card-inner{padding:18px 18px 14px;position:relative;z-index:1;}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.card-icon{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.card-num{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--muted);}
+.card-category{font-family:var(--fm);font-size:8px;letter-spacing:2px;padding:3px 7px;border-radius:2px;border:1px solid;text-transform:uppercase;font-weight:500;}
+.card-title{font-family:var(--fd);font-size:22px;letter-spacing:1.5px;line-height:1.1;margin-bottom:6px;color:#fff;}
+.card-desc{font-family:var(--fb);font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:14px;}
+.card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;}
+.tag{font-family:var(--fm);font-size:9px;padding:3px 7px;border-radius:2px;background:var(--s3);color:var(--dim);border:1px solid var(--border);}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);}
+.card-file{font-family:var(--fm);font-size:9px;color:var(--muted);}
+.launch-btn{font-family:var(--fm);font-size:10px;letter-spacing:1px;padding:7px 14px;border-radius:3px;border:none;cursor:pointer;font-weight:700;transition:all 0.15s;display:flex;align-items:center;gap:5px;}
+.launch-btn:hover{filter:brightness(1.15);}
+.launch-arrow{font-size:12px;}
+
+/* ── DIVIDER ── */
+.section-divider{position:relative;z-index:1;padding:0 28px 20px;max-width:1400px;margin:0 auto;}
+.sd-inner{display:flex;align-items:center;gap:14px;}
+.sd-label{font-family:var(--fm);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;white-space:nowrap;}
+.sd-line{flex:1;height:1px;background:var(--border);}
+.sd-count{font-family:var(--fd);font-size:18px;}
+
+/* ── FOOTER ── */
+footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.ft-brand{font-family:var(--fd);font-size:16px;letter-spacing:3px;color:var(--muted);}
+.ft-copy{font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:1px;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.app-card{animation:fadeUp 0.4s ease both;}
+.app-card:nth-child(1){animation-delay:0.05s;}
+.app-card:nth-child(2){animation-delay:0.10s;}
+.app-card:nth-child(3){animation-delay:0.15s;}
+.app-card:nth-child(4){animation-delay:0.20s;}
+.app-card:nth-child(5){animation-delay:0.25s;}
+.app-card:nth-child(6){animation-delay:0.30s;}
+.app-card:nth-child(7){animation-delay:0.35s;}
+.app-card:nth-child(8){animation-delay:0.40s;}
+.app-card:nth-child(9){animation-delay:0.45s;}
+.app-card:nth-child(10){animation-delay:0.50s;}
+.app-card:nth-child(11){animation-delay:0.55s;}
+.app-card:nth-child(12){animation-delay:0.60s;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){.hero{padding:50px 18px 40px;}.filters,.grid-section{padding-left:18px;padding-right:18px;}.apps-grid{grid-template-columns:1fr;}.hero-stats{gap:20px;}}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">SAIT <em style="color:#A78BFA">MOTOSUITE</em></div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-link" onclick="filterCards('all')">All Apps</span>
+    <span class="nav-link" onclick="filterCards('event')">Event</span>
+    <span class="nav-link" onclick="filterCards('data')">Data</span>
+    <span class="nav-link" onclick="filterCards('education')">Education</span>
+    <span class="nav-link" onclick="filterCards('safety')">Safety</span>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1 class="hero-title">
+    SAIT
+    <span class="accent" style="background:linear-gradient(90deg,#A78BFA,#60A5FA,#34D399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">MOTOSUITE</span>
+  </h1>
+  <p class="hero-sub">A complete set of digital tools for event management, technical data analysis, learner assessment, and driver development.</p>
+
+</section>
+
+<div class="filters" id="filters">
+  <button class="filter-btn active" data-cat="all" onclick="filterCards('all')" style="background:#A78BFA;border-color:#A78BFA;color:#000;">● All (12)</button>
+  <button class="filter-btn" data-cat="event" onclick="filterCards('event')">Event Tools</button>
+  <button class="filter-btn" data-cat="data" onclick="filterCards('data')">Data & Analysis</button>
+  <button class="filter-btn" data-cat="education" onclick="filterCards('education')">Education</button>
+  <button class="filter-btn" data-cat="safety" onclick="filterCards('safety')">Safety & Compliance</button>
+</div>
+
+<div class="grid-section">
+  <div class="apps-grid" id="appsGrid"></div>
+</div>
+
+<footer>
+  <div class="ft-brand">SAIT MOTOSUITE</div>
+  <div class="ft-copy">laurencesait.github.io/racing</div>
+</footer>
+
+<script>
+const APPS = [
+  {
+    num:'01', icon:'💥', title:'Damage Assessment',
+    file:'damage-assessment.html',
+    desc:'Post-incident structural and component damage assessment. 12-section vehicle inspection covering bodywork, mechanical, and safety systems.',
+    category:'event',
+    cat:'Event',
+    tags:['Post-Incident','Inspection','Vehicle'],
+    accent:'#EF4444', accentDim:'rgba(239,68,68,0.08)', iconBg:'rgba(239,68,68,0.12)', catColor:'rgba(239,68,68,0.15)', catText:'#EF4444',
+  },
+  {
+    num:'02', icon:'✅', title:'Post-Event Checklist',
+    file:'post-event-checklist.html',
+    desc:'Comprehensive 13-section post-event vehicle and documentation checklist. Ensures nothing is missed after a race weekend.',
+    category:'event',
+    cat:'Event',
+    tags:['Checklist','Post-Event','Documentation'],
+    accent:'#A3E635', accentDim:'rgba(163,230,53,0.07)', iconBg:'rgba(163,230,53,0.1)', catColor:'rgba(163,230,53,0.12)', catText:'#A3E635',
+  },
+  {
+    num:'03', icon:'🏁', title:'Pit Lane Live',
+    file:'pit-lane-live.html',
+    desc:'Real-time during-event session tracker. Log pit stops, tyre changes, fuel loads, lap times, and driver feedback session by session.',
+    category:'event',
+    cat:'Event',
+    tags:['Live Tracking','Pit Lane','Sessions'],
+    accent:'#AAFF00', accentDim:'rgba(170,255,0,0.07)', iconBg:'rgba(170,255,0,0.1)', catColor:'rgba(170,255,0,0.1)', catText:'#AAFF00',
+  },
+  {
+    num:'04', icon:'⚠️', title:'Risk Assessment Builder',
+    file:'risk-assessment-builder.html',
+    desc:'Formal H&S risk assessment with 18 preset motorsport hazards, 5×5 risk matrix, control measures, and residual risk scoring.',
+    category:'safety',
+    cat:'Safety',
+    tags:['H&S','Risk Matrix','COSHH'],
+    accent:'#22C55E', accentDim:'rgba(34,197,94,0.07)', iconBg:'rgba(34,197,94,0.1)', catColor:'rgba(34,197,94,0.1)', catText:'#22C55E',
+  },
+  {
+    num:'05', icon:'🔧', title:'Pre-Event Preparation',
+    file:'pre-event-checklist.html',
+    desc:'9-section pre-departure checklist covering H&S, vehicle prep, driver safety, data systems, spares, fuel, transport, and admin.',
+    category:'event',
+    cat:'Event',
+    tags:['Pre-Event','Vehicle Prep','Safety Equipment'],
+    accent:'#FF6B2B', accentDim:'rgba(255,107,43,0.08)', iconBg:'rgba(255,107,43,0.1)', catColor:'rgba(255,107,43,0.1)', catText:'#FF6B2B',
+  },
+  {
+    num:'06', icon:'🔍', title:'Scrutineering Checker',
+    file:'scrutineering.html',
+    desc:'Technical compliance inspection tool with PASS/FAIL/N/A per item, reference numbers, measured values, and a formal scrutineering certificate.',
+    category:'safety',
+    cat:'Safety',
+    tags:['Technical','Compliance','Regulations'],
+    accent:'#2563EB', accentDim:'rgba(37,99,235,0.08)', iconBg:'rgba(37,99,235,0.1)', catColor:'rgba(37,99,235,0.1)', catText:'#60A5FA',
+  },
+  {
+    num:'07', icon:'📊', title:'Setup Comparison',
+    file:'setup-comparison.html',
+    desc:'Compare vehicle setup data across multiple sessions side-by-side. Tracks ride height, dampers, ARBs, tyres, aero, and conditions.',
+    category:'data',
+    cat:'Data',
+    tags:['Setup','Compare','Engineering'],
+    accent:'#00D4FF', accentDim:'rgba(0,212,255,0.07)', iconBg:'rgba(0,212,255,0.08)', catColor:'rgba(0,212,255,0.08)', catText:'#00D4FF',
+  },
+  {
+    num:'08', icon:'⏱', title:'Lap Time Analysis',
+    file:'laptime-analysis.html',
+    desc:'Session-by-session performance log with lap-by-lap timing, sector splits, driver feedback ratings, live trend chart, and debrief notes.',
+    category:'data',
+    cat:'Data',
+    tags:['Lap Times','Performance','Telemetry'],
+    accent:'#AAFF00', accentDim:'rgba(170,255,0,0.07)', iconBg:'rgba(170,255,0,0.1)', catColor:'rgba(170,255,0,0.08)', catText:'#AAFF00',
+  },
+  {
+    num:'09', icon:'📦', title:'Parts & Spares Inventory',
+    file:'parts-inventory.html',
+    desc:'Stock management for race parts. Tracks quantity, reorder levels, condition, location, cost, and supplier. Low stock alerts and CSV export.',
+    category:'event',
+    cat:'Event',
+    tags:['Inventory','Parts','Stock Control'],
+    accent:'#00C8A0', accentDim:'rgba(0,200,160,0.07)', iconBg:'rgba(0,200,160,0.1)', catColor:'rgba(0,200,160,0.08)', catText:'#00C8A0',
+  },
+  {
+    num:'10', icon:'📓', title:'Learner Activity Log',
+    file:'learner-activity-log.html',
+    desc:'Portfolio evidence tool for Level 3 learners. 36 competencies across 6 units, activity records, reflection, and tutor sign-off workflow.',
+    category:'education',
+    cat:'Education',
+    tags:['Portfolio','Competencies','Qualification'],
+    accent:'#6366F1', accentDim:'rgba(99,102,241,0.08)', iconBg:'rgba(99,102,241,0.1)', catColor:'rgba(99,102,241,0.1)', catText:'#A5B4FC',
+  },
+  {
+    num:'11', icon:'🔴', title:'Incident Report',
+    file:'incident-report.html',
+    desc:'H&S incident and near-miss reporting with severity classification, 5 Whys root cause analysis, RIDDOR guidance, and corrective actions.',
+    category:'safety',
+    cat:'Safety',
+    tags:['H&S','RIDDOR','Near-Miss','HSE'],
+    accent:'#DC2626', accentDim:'rgba(220,38,38,0.08)', iconBg:'rgba(220,38,38,0.1)', catColor:'rgba(220,38,38,0.1)', catText:'#FCA5A5',
+  },
+  {
+    num:'12', icon:'🏎️', title:'Driver Coaching Log',
+    file:'coaching-log.html',
+    desc:'Structured driver development log. Rate 36 skills across 4 groups, live radar chart, session targets, focus areas, and self-assessment.',
+    category:'education',
+    cat:'Education',
+    tags:['Driver Development','Coaching','Skills'],
+    accent:'#7C3AED', accentDim:'rgba(124,58,237,0.08)', iconBg:'rgba(124,58,237,0.1)', catColor:'rgba(124,58,237,0.08)', catText:'#A78BFA',
+  },
+];
+
+const CAT_LABELS = {all:'All (12)',event:'Event Tools',data:'Data & Analysis',education:'Education',safety:'Safety & Compliance'};
+const CAT_COLORS = {event:'#FF6B2B',data:'#00D4FF',education:'#A78BFA',safety:'#22C55E',all:'#A78BFA'};
+
+function renderCards(){
+  const grid = document.getElementById('appsGrid');
+  grid.innerHTML = APPS.map(a=>`
+    <a class="app-card" href="${a.file}" data-cat="${a.category}"
+       style="--card-glow:radial-gradient(ellipse at 30% 0%,${a.accentDim},transparent 70%); border-color:var(--border);"
+       onmouseover="this.style.borderColor='${a.accent}40'"
+       onmouseout="this.style.borderColor='var(--border)'">
+      <div class="card-accent" style="background:${a.accent};"></div>
+      <div class="card-inner">
+        <div class="card-top">
+          <div class="card-icon" style="background:${a.iconBg};">${a.icon}</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+            <div class="card-num">APP ${a.num}</div>
+            <div class="card-category" style="color:${a.catText};border-color:${a.catColor};background:${a.catColor};">${a.cat}</div>
+          </div>
+        </div>
+        <div class="card-title">${a.title.toUpperCase()}</div>
+        <div class="card-desc">${a.desc}</div>
+        <div class="card-tags">${a.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="card-footer">
+          <div class="card-file">${a.file}</div>
+          <button class="launch-btn" style="background:${a.accent};color:${a.accent==='#AAFF00'||a.accent==='#A3E635'||a.accent==='#22C55E'||a.accent==='#00C8A0'||a.accent==='#00D4FF'?'#000':'#fff'};">
+            OPEN <span class="launch-arrow">→</span>
+          </button>
+        </div>
+      </div>
+    </a>
+  `).join('');
+}
+
+function filterCards(cat){
+  const cards = document.querySelectorAll('.app-card');
+  cards.forEach(c=>{
+    c.classList.toggle('hidden', cat!=='all' && c.dataset.cat!==cat);
+  });
+  document.querySelectorAll('.filter-btn').forEach(b=>{
+    const isActive = b.dataset.cat===cat;
+    b.classList.toggle('active',isActive);
+    if(isActive){
+      const col=CAT_COLORS[cat]||'#A78BFA';
+      const isDark=['#AAFF00','#A3E635','#22C55E','#00C8A0','#00D4FF'].includes(col);
+      b.style.background=col;b.style.borderColor=col;b.style.color=isDark?'#000':'#fff';
+    } else {
+      b.style.background='transparent';b.style.borderColor='var(--border2)';b.style.color='var(--dim)';
+    }
+  });
+}
+
+renderCards();
+</script>
+</body>
+</html>
